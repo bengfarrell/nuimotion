@@ -1,0 +1,41 @@
+{
+  "name": "sweatin",
+  "description": "Sweatin' to the Web - Depth Sensor bindings for web use",
+  "keywords": [
+    "openni",
+    "kinect",
+    "xtion",
+    "depth sensor",
+    "nui"
+  ],
+  "author": {
+    "name": "Ben Farrell",
+    "email": "ben@benfarrell.com",
+    "url": "http://www.benfarrell.com/"
+  },
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/xxxxx/xxxxx.git"
+  },
+  "engines": {
+    "node": ">=0.6.10"
+  },
+  "config": {
+    "verbose": false
+  },
+  "scripts": {
+    "install": "node install.js"
+  },
+  "main": "index",
+  "directories": {
+    "lib": "./lib"
+  },
+  "readme": "",
+  "readmeFilename": "README.md",
+  "_id": "sweatin@0.0.1",
+  "dist": {
+    "shasum": "xxxx"
+  },
+  "_from": "sweatin"
+}
