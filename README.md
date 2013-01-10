@@ -8,7 +8,8 @@ This AddOn serves as a wrapper for OpenNI and NITE.  OpenNI is an open source so
 You can find the OpenNI foundation at www.opennni.org
 
 
-==Using the AddOn==
+Using the AddOn
+---------------
 
 To use this Node.js addon, require node-sweatintotheweb.  You'll also need the OpenNI device drivers placed alongside your main node script.
 
@@ -32,7 +33,8 @@ As the plugin isn't very mature yet - there is only one method to get the depth 
 sweatin.getDepth() to return an integer that represents the depth of the center voxel.
 
 
-==Making the AddOn==
+Making the AddOn
+----------------
 
 For now, my strategy will be to make many C++ style addons that do different things under this project.  I think that this will keep things flexible and fast, versus one monolithic do-all thing.  It also serves the goal to teach at the very base level of OpenNI, and will serve well to template for many useful things.
 
@@ -49,7 +51,8 @@ node-gyp configure build
 This will create the build/Release folder with the Node.js AddOn inside (sweatin.node).
 
 
-== Hardware and Software Dependencies==
+Hardware and Software Dependencies
+----------------------------------
 
 To run this project, there are several setups possible:
 
