@@ -2,125 +2,153 @@
 #include <v8.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
 
-#include <OpenNI.h>
+#include "NiTE.h"
+#include "sweatin.h"
 
-#include "../Common/OniSampleUtilities.h"
+#include "../Common/NiteSampleUtilities.h"
 
 using namespace v8;
-using namespace openni;
 
-Device device;
-VideoStream depth;
+/**
+ * entry point for plugin
+ *
+ * @param plugin target
+ */
+void init(Handle<Object> target) {
+    target->Set(String::NewSymbol("init"),
+        FunctionTemplate::New(initialize)->GetFunction());
+    target->Set(String::NewSymbol("close"),
+        FunctionTemplate::New(close)->GetFunction());
+    context_obj = Persistent<Object>::New(Object::New()); 
+    target->Set(String::New("context"), context_obj); 
+}
 
-Handle<Value> initDevice(const Arguments& args) {
+/** 
+ * shutdown/cleanup NITE/OpenNI
+ * 
+ * @param args (none used)
+ */
+Handle<Value> close(const Arguments& args) {
     HandleScope scope;
-	Status rc = OpenNI::initialize();
-	if (rc != STATUS_OK)
-	{
-		printf("Initialize failed\n%s\n", OpenNI::getExtendedError());
-	}
+    fprintf(stderr, "Shutdown NITE\n");
+    keepWorkerRunning = false;
+    nite::NiTE::shutdown();
+    return scope.Close(Undefined());
+}
 
-	rc = device.open(ANY_DEVICE);
-	if (rc != STATUS_OK)
-	{
-		printf("Couldn't open device\n%s\n", OpenNI::getExtendedError());
-	}
+/**
+ * nodeJS method to intialize and start OpenNI/NiTE
+ *
+ * @param args (none - don't pass them in here)
+ */
+Handle<Value> initialize(const Arguments& args) {
+    HandleScope scope;
 
-    if (device.getSensorInfo(SENSOR_DEPTH) != NULL)
+    keepWorkerRunning = false;
+    fprintf(stderr, "Initialize Depth Camera\n");
+    
+    nite::Status niteRc;
+
+    niteRc = nite::NiTE::initialize();
+    if (niteRc != nite::STATUS_OK)
     {
-        rc = depth.create(device, SENSOR_DEPTH);
-        if (rc != STATUS_OK)
+        fprintf(stderr, "NiTE initialization failed\n");
+        return scope.Close( Undefined() );
+    }
+
+    niteRc = handTracker.create();
+    if (niteRc != nite::STATUS_OK)
+    {
+        fprintf(stderr, "Couldn't create user tracker\n");
+        return scope.Close( Undefined() );
+    }
+
+    handTracker.startGestureDetection(nite::GESTURE_WAVE);
+    handTracker.startGestureDetection(nite::GESTURE_CLICK);
+   // handTracker.startGestureDetection(nite::GESTURE_HAND_RAISE);
+    fprintf(stderr, "Ready for Gestures\n");
+
+    keepWorkerRunning = true;
+    loop = uv_default_loop();
+
+    uv_work_t req;
+    uv_async_init(loop, &async, onMotionEvent);
+    uv_queue_work(loop, &req, frameWorker, onFrameWorkerThreadComplete);
+    uv_run(loop);
+
+    return scope.Close(Undefined());
+}
+
+
+/**
+ * on motion event found in frame processing thread
+ *
+ * @param async handle
+ * @param status (?)
+ */
+void onMotionEvent(uv_async_t *handle, int status /*UNUSED*/) {
+    int gesture = *((int*) handle->data);
+
+    Local <String> gestureString;
+    switch (gesture) {
+        case nite::GESTURE_CLICK:
+            gestureString = String::New("Gesture_Click");
+            break;
+        case nite::GESTURE_WAVE:
+            gestureString = String::New("Gesture_Wave");
+            break;
+        case nite::GESTURE_HAND_RAISE:
+            gestureString = String::New("Gesture_RaiseHand"); 
+            break;
+    }
+
+    Local<Value> args[] = { gestureString }; 
+    node::MakeCallback(context_obj, "on", 1, args); 
+}
+
+/**
+ * thread worker thread for OpenNI/NITE to read frames and do work on them
+ *
+ * @param thread request
+ */
+void onFrameWorkerThreadComplete(uv_work_t *req) {
+    fprintf(stderr, "OpenNI/NITE Processing Complete\n");
+    uv_close((uv_handle_t*) &async, NULL);
+} 
+
+/**
+ * process frames in separate thread
+ *
+ * @param request thread 
+ */
+void frameWorker(uv_work_t *req) {
+    int gst;
+    while (keepWorkerRunning) {
+        nite::HandTrackerFrameRef handTrackerFrame;
+
+        nite::Status niteRc;
+        niteRc = handTracker.readFrame(&handTrackerFrame);
+        if (niteRc != nite::STATUS_OK)
         {
-            printf("Couldn't create depth stream\n%s\n", OpenNI::getExtendedError());
+            fprintf(stderr, "Get next frame failed\n");
+        }
+
+        const nite::Array<nite::GestureData>& gestures = handTrackerFrame.getGestures();
+        for (int i = 0; i < gestures.getSize(); ++i)
+        {
+            if (gestures[i].isComplete())
+            {
+                nite::HandId newId;
+                gst = gestures[i].getType();
+                async.data = (void*) &gst;
+                uv_async_send(&async);
+            }
         }
     }
-
-    rc = depth.start();
-    if (rc != STATUS_OK)
-    {
-        printf("Couldn't start the depth stream\n%s\n", OpenNI::getExtendedError());
-    }
-	return scope.Close( Boolean::New(true) );
 }
 
-Handle<Value> closeDevice(const Arguments& args) {
-    HandleScope scope;
-	depth.stop();
-	depth.destroy();
-	device.close();
-	OpenNI::shutdown();
-	return scope.Close( Boolean::New(true) );
-}
 
-Handle<Value> getDepth(const Arguments& args) {
-    HandleScope scope;
-
-    VideoFrameRef frame;
-
-    Status rc;
-    rc = depth.readFrame(&frame);
-    if (rc != STATUS_OK)
-    {
-        printf("Wait failed\n");
-    }
-
-    if (frame.getVideoMode().getPixelFormat() != PIXEL_FORMAT_DEPTH_1_MM && frame.getVideoMode().getPixelFormat() != PIXEL_FORMAT_DEPTH_100_UM)
-    {
-        printf("Unexpected frame format\n");
-    }
-
-    DepthPixel* pDepth = (DepthPixel*)frame.getData();
-
-    int middleIndex = (frame.getHeight()+1)*frame.getWidth()/2;
-    return scope.Close(Number::New(pDepth[middleIndex]));
-}
-
-Handle<Value> getRandomCoords2D(const Arguments& args) {
-    HandleScope scope;
-
-    Local<Object> obj = Object::New();
-    obj->Set(String::NewSymbol("x"), Number::New( 1 + (rand() % 100 )));
-    obj->Set(String::NewSymbol("y"), Number::New( 1 + (rand() % 100 )));
-
-    return scope.Close(obj);
-}
-
-Handle<Value> getRandomCoords3D(const Arguments& args) {
-    HandleScope scope;
-
-    if (args.Length() < 3) {
-        ThrowException(Exception::TypeError(String::New("Wrong number of arguments")));
-        return scope.Close(Undefined());
-    }
-
-    if (!args[0]->IsNumber() || !args[1]->IsNumber() || !args[2]->IsNumber()) {
-        ThrowException(Exception::TypeError(String::New("Wrong arguments")));
-        return scope.Close(Undefined());
-    }
-
-    Local<Number> xBound = args[0]->ToNumber();
-    Local<Number> yBound = args[1]->ToNumber();
-    Local<Number> zBound = args[2]->ToNumber();
-
-    Local<Object> obj = Object::New();
-    obj->Set(String::NewSymbol("x"), Number::New( 1 + (rand() % xBound->IntegerValue() )));
-    obj->Set(String::NewSymbol("y"), Number::New( 1 + (rand() % yBound->IntegerValue() )));
-    obj->Set(String::NewSymbol("z"), Number::New( 1 + (rand() % zBound->IntegerValue() )));
-    return scope.Close(obj);
-}
-
-void init(Handle<Object> target) {
-    target->Set(String::NewSymbol("getRandomCoords3D"),
-        FunctionTemplate::New(getRandomCoords3D)->GetFunction());
-
-    target->Set(String::NewSymbol("getRandomCoords2D"),
-        FunctionTemplate::New(getRandomCoords2D)->GetFunction());
-
-    target->Set(String::NewSymbol("initDevice"),
-        FunctionTemplate::New(initDevice)->GetFunction());
-
-    target->Set(String::NewSymbol("getDepth"),
-        FunctionTemplate::New(getDepth)->GetFunction());
-}
+/* Module Declaration */
 NODE_MODULE(sweatin, init)
