@@ -67,7 +67,12 @@ Handle<Value> initialize(const Arguments& args) {
 
     handTracker.startGestureDetection(nite::GESTURE_WAVE);
     handTracker.startGestureDetection(nite::GESTURE_CLICK);
-   // handTracker.startGestureDetection(nite::GESTURE_HAND_RAISE);
+    
+    /*
+    this is actually pretty flaky - emitting several gestures at once, leaving out for now
+    handTracker.startGestureDetection(nite::GESTURE_HAND_RAISE);
+    */
+    
     fprintf(stderr, "Ready for Gestures\n");
 
     keepWorkerRunning = true;
@@ -103,7 +108,6 @@ void onMotionEvent(uv_async_t *handle, int status /*UNUSED*/) {
             gestureString = String::New("Gesture_RaiseHand"); 
             break;
     }
-
     Local<Value> args[] = { gestureString }; 
     node::MakeCallback(context_obj, "on", 1, args); 
 }
@@ -140,7 +144,6 @@ void frameWorker(uv_work_t *req) {
         {
             if (gestures[i].isComplete())
             {
-                nite::HandId newId;
                 gst = gestures[i].getType();
                 async.data = (void*) &gst;
                 uv_async_send(&async);

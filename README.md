@@ -8,6 +8,12 @@ This AddOn serves as a wrapper for OpenNI and NITE.  OpenNI is an open source so
 You can find the OpenNI foundation at www.opennni.org
 
 
+AddOn Functionality
+-------------------
+
+So far not much functionality - AddOn will alert the user with "Gesture_Wave" or "Gesture_Click" if the user waves at the camera or extends hand quickly to make a "clicking motion" as if clicking something on an imaginary screen with their hand.
+
+
 Using the AddOn
 ---------------
 
@@ -20,17 +26,7 @@ OpenNI2 ->
 		libOniFile.so
 		libPS1080.so
 
-To start using, require and save the require as a variable:
-
-var sweatin = require("node-sweatintotheweb");
-
-After creation, call "initDevice" to start:
-
-sweatin.initDevice();
-
-As the plugin isn't very mature yet - there is only one method to get the depth of the very center voxel.  This isn't very useful, but for now, you may call:
-
-sweatin.getDepth() to return an integer that represents the depth of the center voxel.
+As the plugin isn't very mature yet - there is only a callback to get 2 supported gestures, a wave and a click motion.
 
 
 Making the AddOn
@@ -71,4 +67,21 @@ To run this project, there are several setups possible:
 
 
 OpenNI Device drivers can be found at http://www.openni.org.  Download the OpenNI2 package for your system, and pull the device drivers after install from OpenNI-2.0.0/Redist/.  The folder you need is OpenNI2 - which as stated above, you need to place side by side with your Node.js main script.
+
+
+Example Node.js Code
+--------------------
+
+var s2web = require("node-sweatintotheweb");
+s2web.context.on = function(name) {
+    console.log(name); // prints a gesture to the console - just click or wave right now
+};
+
+// make sure to call this after setting the context
+// I have to do runtime checking to make sure the on callback handler exists and I haven't done that yet
+s2web.init();
+
+process.on('exit', function() {
+    s2web.close();
+});
 

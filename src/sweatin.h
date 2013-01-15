@@ -17,6 +17,9 @@ nite::HandTracker handTracker;
 /* if thread should be locked and running */
 bool keepWorkerRunning;
 
+/* if hand is currently raised */
+bool isHandRaised;
+
 /* thread loop */
 uv_loop_t *loop;
 
