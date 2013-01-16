@@ -72,7 +72,7 @@ Handle<Value> initialize(const Arguments& args) {
     this is actually pretty flaky - emitting several gestures at once, leaving out for now
     handTracker.startGestureDetection(nite::GESTURE_HAND_RAISE);
     */
-    
+
     fprintf(stderr, "Ready for Gestures\n");
 
     keepWorkerRunning = true;
@@ -109,7 +109,9 @@ void onMotionEvent(uv_async_t *handle, int status /*UNUSED*/) {
             break;
     }
     Local<Value> args[] = { gestureString }; 
-    node::MakeCallback(context_obj, "on", 1, args); 
+    //if ( !context_obj->IsEmpty() ) {
+        node::MakeCallback(context_obj, "on", 1, args); 
+    //}
 }
 
 /**
