@@ -47,6 +47,13 @@ node-gyp configure build
 This will create the build/Release folder with the Node.js AddOn inside (sweatin.node).
 
 
+Build Dependencies
+----------------------------------
+
+Windows: Place contents of C:/Program Files/OpenNI2/Redist/ (or whichever folder you installed to) in root "node-sweatintotheweb" module folder.  Also add the NiTE2.dll from C:/Program Files/PrimeSense to this root.
+
+
+
 Hardware and Software Dependencies
 ----------------------------------
 
@@ -61,9 +68,9 @@ To run this project, there are several setups possible:
 	a.  Asus Xtion Pro or Pro Live Depth Camera with OpenNI device drivers
 	b.  MS Kinect with Freenect Drivers https://github.com/piedar/OpenNI2/tree/FreenectDriver (untested as of yet)
 
-3.  Windows (untested)
+3.  Windows
 	a.  Asus Xtion Pro or Pro Live Depth Camera with OpenNI device drivers
-	b.  MS Kinect with official MS Kinect SDK drivers
+	b.  MS Kinect with official MS Kinect SDK drivers (untested)
 
 
 OpenNI Device drivers can be found at http://www.openni.org.  Download the OpenNI2 package for your system, and pull the device drivers after install from OpenNI-2.0.0/Redist/.  The folder you need is OpenNI2 - which as stated above, you need to place side by side with your Node.js main script.
