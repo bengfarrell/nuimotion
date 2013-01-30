@@ -1,9 +1,9 @@
 /*****************************************************************************
 *                                                                            *
-*  OpenNI 2.x Alpha                                                          *
+*  PrimeSense PSCommon Library                                               *
 *  Copyright (C) 2012 PrimeSense Ltd.                                        *
 *                                                                            *
-*  This file is part of OpenNI.                                              *
+*  This file is part of PSCommon.                                            *
 *                                                                            *
 *  Licensed under the Apache License, Version 2.0 (the "License");           *
 *  you may not use this file except in compliance with the License.          *
@@ -18,35 +18,25 @@
 *  limitations under the License.                                            *
 *                                                                            *
 *****************************************************************************/
-#ifndef _ONI_DRIVER_TYPES_H_
-#define _ONI_DRIVER_TYPES_H_
+#ifndef _ONI_PLATFORM_MACOSX_H_
+#define _ONI_PLATFORM_MACOSX_H_
 
-#include <OniCTypes.h>
-#include <stdarg.h>
+// Start with Linux-x86, and override what's different
+#include "../Linux-x86/OniPlatformLinux-x86.h"
 
-#define ONI_STREAM_PROPERTY_PRIVATE_BASE XN_MAX_UINT16
+#include <sys/time.h>
 
-typedef struct
-{
-	int dataSize;
-	void* data;
-} OniGeneralBuffer;
+#undef ONI_PLATFORM
+#undef ONI_PLATFORM_STRING
+#define ONI_PLATFORM ONI_PLATFORM_MACOSX
+#define ONI_PLATFORM_STRING "MacOSX"
 
-typedef struct
-{
-	OniFrame frame;
-	void* pDriverCookie;
-	void* pOpenNICookie;
-} OniDriverFrame;
+#define ONI_PLATFORM_HAS_NO_TIMED_OPS
+#define ONI_PLATFORM_HAS_NO_CLOCK_GETTIME
+#define ONI_PLATFORM_HAS_NO_SCHED_PARAM
+#define ONI_PLATFORM_HAS_BUILTIN_SEMUN
 
-/////// DriverServices
-struct OniDriverServices
-{
-	void* driverServices;
-	void (ONI_CALLBACK_TYPE* errorLoggerAppend)(void* driverServices, const char* format, va_list args);
-	void (ONI_CALLBACK_TYPE* errorLoggerClear)(void* driverServices);
-	void (ONI_CALLBACK_TYPE* log)(void* driverServices, int severity, const char* file, int line, const char* mask, const char* message);
-};
-
-
-#endif // _ONI_DRIVER_TYPES_H_
+#undef ONI_THREAD_STATIC
+#define ONI_THREAD_STATIC 
+ 
+#endif //_ONI_PLATFORM_MACOSX_H_

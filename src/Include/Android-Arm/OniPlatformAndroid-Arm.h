@@ -18,35 +18,19 @@
 *  limitations under the License.                                            *
 *                                                                            *
 *****************************************************************************/
-#ifndef _ONI_DRIVER_TYPES_H_
-#define _ONI_DRIVER_TYPES_H_
+#ifndef _ONI_PLATFORM_ANDROID_ARM_H_
+#define _ONI_PLATFORM_ANDROID_ARM_H_
 
-#include <OniCTypes.h>
-#include <stdarg.h>
+// Start with Linux-x86, and override what's different
+#include "../Linux-x86/OniPlatformLinux-x86.h"
 
-#define ONI_STREAM_PROPERTY_PRIVATE_BASE XN_MAX_UINT16
+//---------------------------------------------------------------------------
+// Platform Basic Definition
+//---------------------------------------------------------------------------
+#undef ONI_PLATFORM
+#undef ONI_PLATFORM_STRING
 
-typedef struct
-{
-	int dataSize;
-	void* data;
-} OniGeneralBuffer;
+#define ONI_PLATFORM ONI_PLATFORM_ANDROID_ARM
+#define ONI_PLATFORM_STRING "Android-Arm"
 
-typedef struct
-{
-	OniFrame frame;
-	void* pDriverCookie;
-	void* pOpenNICookie;
-} OniDriverFrame;
-
-/////// DriverServices
-struct OniDriverServices
-{
-	void* driverServices;
-	void (ONI_CALLBACK_TYPE* errorLoggerAppend)(void* driverServices, const char* format, va_list args);
-	void (ONI_CALLBACK_TYPE* errorLoggerClear)(void* driverServices);
-	void (ONI_CALLBACK_TYPE* log)(void* driverServices, int severity, const char* file, int line, const char* mask, const char* message);
-};
-
-
-#endif // _ONI_DRIVER_TYPES_H_
+#endif //_ONI_PLATFORM_LINUX_ARM_H_
