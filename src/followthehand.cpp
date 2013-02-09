@@ -1,3 +1,9 @@
+/** 
+ * Activity using OpenNI/NiTE to track ONLY one hand
+ * This hand must issue a wave gesture, and only then will it begin tracking
+ * If hand is lost, user must wave again to regain tracking ability
+ */
+
 #include <node.h>
 #include <v8.h>
 #include <stdio.h>
