@@ -28,6 +28,8 @@ OpenNI2 ->
 
 As the plugin isn't very mature yet - there is only a callback to get 2 supported gestures, a wave and a click motion.
 
+If using skeleton tracking, add the NiTE2 folder from the "Resist" folder alongside your main node script.  This folder can be found in your NiTE2.0 install package
+
 
 Making the AddOn
 ----------------
