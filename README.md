@@ -78,76 +78,49 @@ To run this project, there are several setups possible:
 OpenNI Device drivers can be found at http://www.openni.org.  Download the OpenNI2 package for your system, and pull the device drivers after install from OpenNI-2.0.0/Redist/.  The folder you need is OpenNI2 - which as stated above, you need to place side by side with your Node.js main script.
 
 
-Sweatin' Hello World Example Node.js Code
------------------------------------------
+Sweatin' Hello World Activity
+------------------------------
 
+To use:
 var s2web = require("node-sweatintotheweb");
-s2web.context.on = function(name) {
-    console.log(name); // prints a gesture to the console - just click or wave right now
-};
 
-// make sure to call this after setting the context
-// I have to do runtime checking to make sure the on callback handler exists and I haven't done that yet
-s2web.init();
+This activity doesn't do much - it simply dispatches the events that the NiTE middleware offers.
+This includes Gesture_Click and Gesture_Wave.  Gesture_RaiseHand is present but commented out in the source code
+because it seemed a little flaky bombarding you with raised hand events.  Gesture_Click can be a little hard to 
+accomplish - but it is a result of the user extending their hand to "click" something on screen, towards the camera.
 
-process.on('exit', function() {
-    s2web.close();
-});
+The following events are dispatched: "Gesture_Click" and "Gesture_Wave"
+
+For a working example, please see /tests/sweatin.js
 
 
 Follow the Hand Activity
 ------------------------
 
+To use:
+var s2web = require("node-sweatintotheweb/followthehand");
+
 This activity requires the user to wave at the camera.  Once this gesture is captured ("Gesture_Wave"), the hand used to wave is registered as the active hand.  Coordinates for this hand can be obtained by getHand().  When the hand is lost, an event is dispatched to Node: "Gesture_LostHand".  The user must then wave again for the hand to be re-registered for use.
 
-var s2web = require("node-sweatintotheweb/followthehand");
-s2web.context.on = function(name) {
-    console.log(name); // prints a gesture to the console - just click or wave right now
-};
+The following events are dispatched: "Gesture_Wave", "Gesture_LostHand"
 
-// make sure to call this after setting the context
-// I have to do runtime checking to make sure the on callback handler exists and I haven't done that yet
-s2web.init();
+In addition to events, the activity offers the "getHand()" method.  This method will give a JSON object containing "x", "y", and "z" properties.  If the hand is not being tracked, all coordinates will be represented by -9999
 
-process.on('exit', function() {
-    s2web.close();
-});
-
-/* 
-call getHand - note that even though it's inline here, it won't properly work until the user has waved to the camera.  Start up a Javascript timer once the gesture has been registered.  If hand is not tracked, coordinates returned will be -9999
-*/
-hand = s2web.getHand();
-console.log( "x: "+ hand.x + ", y: " + hand.y + ", z: " + hand.z);
+For a working example, please see /tests/followthehand.js
 
 
 Hand Tracker Activity
 ----------------------
 
+To use:
+var s2web = require("node-sweatintotheweb/handtracker");
+
 In this activity, unlike "Follow the Hand", the user is not required to wave to the camera for their hand to be tracked.  In fact, this activity tracks both hands.  Simply by entering the scene, if the user is visible and their skeleton is able to be tracked, both left and right hand coordinates can be obtained.
 
 The following events are dispatched: "NEW_USER", "USER_IS_VISIBLE", "USER_IS_OUT_OF_SCENE", "USER_IS_LOST", "SKELETON_STOPPED_TRACKING", "SKELETON_CALIBRATING", "SKELETON_TRACKING", "SKELETON_CALIBRATION_FAILED", "DEVICE_INITIALIZED", "DEVICE_ERROR"
 
-var s2web = require("node-sweatintotheweb/handtracker");
-s2web.context.on = function(name) {
-    console.log(name); // prints a gesture to the console - just click or wave right now
-};
+In addition to events, the activity offers the "getHands()" method.  This method will give a JSON object containing a "right_hand" object and a "left_hand" object.  Each of those contain "x", "y", "z", and "active" properties.  The first three are coordinates, and the active property is a boolean indicating if the hand is currently being tracked.
 
-// make sure to call this after setting the context
-// I have to do runtime checking to make sure the on callback handler exists and I haven't done that yet
-s2web.init();
+If the hand is not being tracked, the "active" boolean is false, and the last active coordinates for the hand is given.
 
-process.on('exit', function() {
-    s2web.close();
-});
-
-/* 
-call getHands - note that even though it's inline here, it won't properly work until the user's skeleton is tracking.  Start up a Javascript timer, once t"SKELETON_TRACKING" is dispatched out.  If hand is not tracked, coordinates returned will be last coordinates given, or 0.  An "active" boolean is available on each hand for the developer to know if the hand is actively being tracked by the system
-*/
-hand = s2web.getHands();
-if (hand.right_hand.active) {
-	console.log( "Right x: "+ hand.right_hand.x + ", Right y: " + hand.right_hand.y + ", Right z: " + hand.right_hand.z);
-}
-
-if (hand.left_hand.active) {
-	console.log( "Left x: "+ hand.left_hand.x + ", Left y: " + hand.left_hand.y + ", Left z: " + hand.left_hand.z);
-}
+For a working example, please see /tests/handtracker.js
