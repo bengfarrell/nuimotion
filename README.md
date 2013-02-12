@@ -62,16 +62,22 @@ Hardware and Software Dependencies
 To run this project, there are several setups possible:
 
 1.  Ubuntu 12.04 or greater (my machine, haven't tried on lower)
-	a.  Asus Xtion Pro or Pro Live Depth Camera with OpenNI device drivers
+
+	a.  Asus Xtion Pro or Pro Live Depth Camera with OpenNI device drivers (my main device and environment)
+
 	b.  MS Kinect with Freenect Drivers https://github.com/piedar/OpenNI2/tree/FreenectDriver (untested as of yet)
 
 
 2.  Mac OSX (untested)
+
 	a.  Asus Xtion Pro or Pro Live Depth Camera with OpenNI device drivers
+
 	b.  MS Kinect with Freenect Drivers https://github.com/piedar/OpenNI2/tree/FreenectDriver (untested as of yet)
 
 3.  Windows
+
 	a.  Asus Xtion Pro or Pro Live Depth Camera with OpenNI device drivers
+
 	b.  MS Kinect with official MS Kinect SDK drivers (untested)
 
 
