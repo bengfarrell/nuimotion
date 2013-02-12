@@ -8,6 +8,9 @@
     "depth sensor",
     "nui"
   ],
+    "scripts": {
+        "install": "node-gyp rebuild"
+    },
   "author": {
     "name": "Ben Farrell",
     "email": "ben@benfarrell.com",

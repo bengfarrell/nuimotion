@@ -32,6 +32,15 @@
 
         # -Wl,-rpath will warn of failure on Windows, don't worry - it's a Linux thing, let it fail
         "libraries": ["-l<(ONI_Root)OpenNI2", "-l<(ONI_Root)NiTE2", "-Wl,-rpath ./"]
+    },
+
+    {
+        "target_name": "handtracker",
+        "sources": [ "handtracker.cpp" ],
+        "include_dirs": [ "./Include"],
+
+        # -Wl,-rpath will warn of failure on Windows, don't worry - it's a Linux thing, let it fail
+        "libraries": ["-l<(ONI_Root)OpenNI2", "-l<(ONI_Root)NiTE2", "-Wl,-rpath ./"]
     }
   ]
 }

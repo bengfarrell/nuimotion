@@ -20,6 +20,12 @@ bool keepWorkerRunning;
 /* if hand is currently raised */
 bool isHandRaised;
 
+/** current user state */
+int currentUserState = 0;
+
+/** current skeleton state */
+int currentSkeletonState = 0;
+
 /* thread loop */
 uv_loop_t *loop;
 
