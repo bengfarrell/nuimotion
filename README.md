@@ -17,18 +17,46 @@ So far not much functionality - AddOn will alert the user with "Gesture_Wave" or
 Using the AddOn
 ---------------
 
-To use this Node.js addon, require node-sweatintotheweb.  You'll also need the OpenNI device drivers placed alongside your main node script.
+To use this Node.js addon, try out one of the "activities below".  You'll also need the OpenNI device drivers placed alongside your main node script.
 
 On Ubuntu these device drivers live in:
 
-OpenNI2 ->
-	Drivers ->
-		libOniFile.so
-		libPS1080.so
+MyNodeProj->
 
-As the plugin isn't very mature yet - there is only a callback to get 2 supported gestures, a wave and a click motion.
+    OpenNI2 ->
 
-If using skeleton tracking, add the NiTE2 folder from the "Resist" folder alongside your main node script.  This folder can be found in your NiTE2.0 install package
+	    Drivers ->
+
+		    libOniFile.so
+
+		     libPS1080.so
+
+
+If using skeleton tracking, add the NiTE2 folder from the "Redist" folder alongside your main node script.  This folder can be found in your NiTE2.0 install package
+
+On Ubuntu these files live in:
+
+MyNodeProj->
+
+    NiTE2 ->
+
+	    Data ->
+
+		    lbsdata.idx
+
+		    lbsdata.lbd
+
+		    lbsparam1.lbd
+
+		    lbsparam2.lbd
+
+		FeatureExctraction.ini
+
+		h.dat
+
+		HandAlgorithms.ini
+		
+		s.dat
 
 
 Making the AddOn
