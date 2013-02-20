@@ -40,6 +40,9 @@ Joint joint_leftHand;
 /** right hand skeletal joint */
 Joint joint_rightHand;
 
+/** torso/body center */
+Joint joint_bodyCenter;
+
 /** last user event type dispatched */
 int lastUserEventDispatched;
 

@@ -64,9 +64,16 @@ Handle<Value> getHands(const Arguments& args) {
     rHand->Set(String::NewSymbol("z"), Number::New( joint_rightHand.zPos ));
     rHand->Set(String::NewSymbol("active"), Number::New( joint_rightHand.isActive ));
 
+    Local<Object> body = Object::New(); 
+    body->Set(String::NewSymbol("x"), Number::New( joint_bodyCenter.xPos ));
+    body->Set(String::NewSymbol("y"), Number::New( joint_bodyCenter.yPos ));
+    body->Set(String::NewSymbol("z"), Number::New( joint_bodyCenter.zPos ));
+    body->Set(String::NewSymbol("active"), Number::New( joint_bodyCenter.isActive ));
+
     Local<Object> obj = Object::New(); 
     obj->Set(String::NewSymbol("right_hand"), rHand);  
     obj->Set(String::NewSymbol("left_hand"), lHand);    
+    obj->Set(String::NewSymbol("body_center"), body);    
     return scope.Close(obj);
 }
 
@@ -191,6 +198,7 @@ Handle<Value> initialize(const Arguments& args) {
     keepWorkerRunning = true;
     joint_leftHand.isActive = false;
     joint_rightHand.isActive = false;
+    joint_bodyCenter.isActive = false;
     onDeviceEvent(DEVICE_INITIALIZED);
     
     loop = uv_default_loop();
@@ -241,11 +249,13 @@ void frameWorker(uv_work_t *req) {
                 userTracker.startSkeletonTracking(user.getId());
                 joint_leftHand.isActive = false;
                 joint_rightHand.isActive = false;
+                joint_bodyCenter.isActive = false;
             } 
             else if (user.getSkeleton().getState() == nite::SKELETON_TRACKED)
             {
                 const nite::SkeletonJoint &leftHand = user.getSkeleton().getJoint(nite::JOINT_LEFT_HAND);
                 const nite::SkeletonJoint &rightHand = user.getSkeleton().getJoint(nite::JOINT_RIGHT_HAND);
+                const nite::SkeletonJoint &bodyCenter = user.getSkeleton().getJoint(nite::JOINT_TORSO);
 
                 joint_leftHand.xPos = leftHand.getPosition().x;
                 joint_leftHand.yPos = leftHand.getPosition().y;
@@ -257,6 +267,11 @@ void frameWorker(uv_work_t *req) {
                 joint_rightHand.zPos = rightHand.getPosition().z;
                 joint_rightHand.type = nite::JOINT_RIGHT_HAND;
 
+                joint_bodyCenter.xPos = bodyCenter.getPosition().x;
+                joint_bodyCenter.yPos = bodyCenter.getPosition().y;
+                joint_bodyCenter.zPos = bodyCenter.getPosition().z;
+                joint_bodyCenter.type = nite::JOINT_TORSO;
+
                 if (leftHand.getPositionConfidence() > .5) {
                     joint_leftHand.isActive = true;
                 } else {
@@ -266,6 +281,12 @@ void frameWorker(uv_work_t *req) {
                     joint_rightHand.isActive = true;
                 } else {
                     joint_rightHand.isActive = false;
+                }
+
+                if (bodyCenter.getPositionConfidence() > .5) {
+                    joint_bodyCenter.isActive = true;
+                } else {
+                    joint_bodyCenter.isActive = false;
                 }
             }
         }
