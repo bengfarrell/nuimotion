@@ -157,4 +157,6 @@ In addition to events, the activity offers the "getHands()" method.  This method
 
 If the hand is not being tracked, the "active" boolean is false, and the last active coordinates for the hand is given.
 
+The hands object also includes a "body_center" object which represents the user's torso.  It's included here because it can be very nice to figure out where the hands are in relation to the body, instead of the global space.
+
 For a working example, please see /tests/handtracker.js
