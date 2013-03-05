@@ -30,6 +30,7 @@ struct Joint {
     int xPos;
     int yPos;
     int zPos;
+    float orientation;
     int type;
     bool isActive;
 };
@@ -37,8 +38,20 @@ struct Joint {
 /** left hand skeletal joint */
 Joint joint_leftHand;
 
+/** left shoulder joint */
+Joint joint_leftShoulder;
+
+/** left elbow joint */
+Joint joint_leftElbow;
+
 /** right hand skeletal joint */
 Joint joint_rightHand;
+
+/** right shoulder skeletal joint */
+Joint joint_rightShoulder;
+
+/** right elbow skeletal joint */
+Joint joint_rightElbow;
 
 /** torso/body center */
 Joint joint_bodyCenter;
@@ -60,6 +73,7 @@ void onFrameWorkerThreadComplete(uv_work_t* req);
 void onTrackingEvent(uv_async_t *handle, int status /*UNUSED*/);
 void onDeviceEvent(int eventType); 
 void updateUserState(const nite::UserData& user, unsigned long long ts);
+void mapJointFromSkeleton(Joint &j, nite::Skeleton s) ;
 
 /* NodeJS Methods */
 Handle<Value> initialize(const Arguments& args);

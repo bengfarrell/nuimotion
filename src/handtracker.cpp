@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <math.h>
 
 #include "NiTE.h"
 #include "handtracker.h"
@@ -51,17 +52,30 @@ void init(Handle<Object> target) {
 
 
 Handle<Value> getHands(const Arguments& args) {
+    float dist_lh2le = sqrt( pow(joint_leftHand.xPos - joint_leftElbow.xPos, 2) + pow(joint_leftHand.yPos- joint_leftElbow.yPos, 2) + pow(joint_leftHand.zPos - joint_leftElbow.zPos, 2) );
+    float dist_lh2ls = sqrt( pow(joint_leftHand.xPos - joint_leftShoulder.xPos, 2) + pow(joint_leftHand.yPos - joint_leftShoulder.yPos, 2) + pow(joint_leftHand.zPos - joint_leftShoulder.zPos, 2) );
+    float dist_le2ls = sqrt( pow(joint_leftElbow.xPos - joint_leftShoulder.xPos, 2) + pow(joint_leftElbow.yPos - joint_leftShoulder.yPos, 2) + pow(joint_leftElbow.zPos - joint_leftShoulder.zPos, 2) );
+
+    float dist_rh2re = sqrt( pow(joint_rightHand.xPos - joint_rightElbow.xPos, 2) + pow(joint_rightHand.yPos- joint_rightElbow.yPos, 2) + pow(joint_rightHand.zPos - joint_rightElbow.zPos, 2) );
+    float dist_rh2rs = sqrt( pow(joint_rightHand.xPos - joint_rightShoulder.xPos, 2) + pow(joint_rightHand.yPos - joint_rightShoulder.yPos, 2) + pow(joint_rightHand.zPos - joint_rightShoulder.zPos, 2) );
+    float dist_re2rs = sqrt( pow(joint_rightElbow.xPos - joint_rightShoulder.xPos, 2) + pow(joint_rightElbow.yPos - joint_rightShoulder.yPos, 2) + pow(joint_rightElbow.zPos - joint_rightShoulder.zPos, 2) );
+
+    int left_percentExtended = (int) dist_lh2ls/(dist_le2ls + dist_lh2le) *100;
+    int right_percentExtended = (int) dist_rh2rs/(dist_re2rs + dist_rh2re) *100;
+
     HandleScope scope;
     Local<Object> lHand = Object::New(); 
     lHand->Set(String::NewSymbol("x"), Number::New( joint_leftHand.xPos ));
     lHand->Set(String::NewSymbol("y"), Number::New( joint_leftHand.yPos ));
     lHand->Set(String::NewSymbol("z"), Number::New( joint_leftHand.zPos ));
+    lHand->Set(String::NewSymbol("percentExtended"), Number::New(left_percentExtended));
     lHand->Set(String::NewSymbol("active"), Number::New( joint_leftHand.isActive ));
 
     Local<Object> rHand = Object::New(); 
     rHand->Set(String::NewSymbol("x"), Number::New( joint_rightHand.xPos ));
     rHand->Set(String::NewSymbol("y"), Number::New( joint_rightHand.yPos ));
     rHand->Set(String::NewSymbol("z"), Number::New( joint_rightHand.zPos ));
+    rHand->Set(String::NewSymbol("percentExtended"), Number::New(right_percentExtended));
     rHand->Set(String::NewSymbol("active"), Number::New( joint_rightHand.isActive ));
 
     Local<Object> body = Object::New(); 
@@ -197,8 +211,21 @@ Handle<Value> initialize(const Arguments& args) {
 
     keepWorkerRunning = true;
     joint_leftHand.isActive = false;
+    joint_leftHand.type = nite::JOINT_LEFT_HAND;
+    joint_leftElbow.isActive = false;
+    joint_leftElbow.type = nite::JOINT_LEFT_ELBOW;
+    joint_leftShoulder.isActive = false;
+    joint_leftShoulder.type = nite::JOINT_LEFT_SHOULDER;
+
     joint_rightHand.isActive = false;
+    joint_rightHand.type = nite::JOINT_RIGHT_HAND;
+    joint_rightElbow.isActive = false;
+    joint_rightElbow.type = nite::JOINT_RIGHT_ELBOW;
+    joint_rightShoulder.type = nite::JOINT_RIGHT_SHOULDER;
+
     joint_bodyCenter.isActive = false;
+    joint_bodyCenter.type = nite::JOINT_TORSO;
+
     onDeviceEvent(DEVICE_INITIALIZED);
     
     loop = uv_default_loop();
@@ -248,48 +275,43 @@ void frameWorker(uv_work_t *req) {
             {
                 userTracker.startSkeletonTracking(user.getId());
                 joint_leftHand.isActive = false;
+                joint_leftElbow.isActive = false;
+                joint_leftShoulder.isActive = false;
                 joint_rightHand.isActive = false;
+                joint_rightElbow.isActive = false;
+                joint_rightShoulder.isActive = false;
                 joint_bodyCenter.isActive = false;
             } 
             else if (user.getSkeleton().getState() == nite::SKELETON_TRACKED)
             {
-                const nite::SkeletonJoint &leftHand = user.getSkeleton().getJoint(nite::JOINT_LEFT_HAND);
-                const nite::SkeletonJoint &rightHand = user.getSkeleton().getJoint(nite::JOINT_RIGHT_HAND);
-                const nite::SkeletonJoint &bodyCenter = user.getSkeleton().getJoint(nite::JOINT_TORSO);
-
-                joint_leftHand.xPos = leftHand.getPosition().x;
-                joint_leftHand.yPos = leftHand.getPosition().y;
-                joint_leftHand.zPos = leftHand.getPosition().z;
-                joint_leftHand.type = nite::JOINT_LEFT_HAND;
-
-                joint_rightHand.xPos = rightHand.getPosition().x;
-                joint_rightHand.yPos = rightHand.getPosition().y;
-                joint_rightHand.zPos = rightHand.getPosition().z;
-                joint_rightHand.type = nite::JOINT_RIGHT_HAND;
-
-                joint_bodyCenter.xPos = bodyCenter.getPosition().x;
-                joint_bodyCenter.yPos = bodyCenter.getPosition().y;
-                joint_bodyCenter.zPos = bodyCenter.getPosition().z;
-                joint_bodyCenter.type = nite::JOINT_TORSO;
-
-                if (leftHand.getPositionConfidence() > .5) {
-                    joint_leftHand.isActive = true;
-                } else {
-                    joint_leftHand.isActive = false;
-                }
-                if (rightHand.getPositionConfidence() > .5) {
-                    joint_rightHand.isActive = true;
-                } else {
-                    joint_rightHand.isActive = false;
-                }
-
-                if (bodyCenter.getPositionConfidence() > .5) {
-                    joint_bodyCenter.isActive = true;
-                } else {
-                    joint_bodyCenter.isActive = false;
-                }
+                const nite::Skeleton &skeleton = user.getSkeleton();
+                mapJointFromSkeleton(joint_leftHand, skeleton);
+                mapJointFromSkeleton(joint_leftElbow, skeleton);
+                mapJointFromSkeleton(joint_leftShoulder, skeleton);
+                mapJointFromSkeleton(joint_rightHand, skeleton);
+                mapJointFromSkeleton(joint_rightElbow, skeleton);
+                mapJointFromSkeleton(joint_rightShoulder, skeleton);
+                mapJointFromSkeleton(joint_bodyCenter, skeleton);
             }
         }
+    }
+}
+
+/**
+ * map joint properties from same joint on skeleton
+ *
+ * Joint j
+ * Skeleton s
+ */
+void mapJointFromSkeleton(Joint &j, nite::Skeleton s) {
+    j.xPos = (int) s.getJoint( (nite::JointType) j.type).getPosition().x;
+    j.yPos = (int) s.getJoint( (nite::JointType) j.type).getPosition().y;
+    j.zPos = (int) s.getJoint( (nite::JointType) j.type).getPosition().z;
+
+    if (s.getJoint( (nite::JointType) j.type).getPositionConfidence() > .5) {
+        j.isActive = true;
+    } else {
+        j.isActive = false;
     }
 }
 
