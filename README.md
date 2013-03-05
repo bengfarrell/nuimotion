@@ -153,7 +153,7 @@ In this activity, unlike "Follow the Hand", the user is not required to wave to 
 
 The following events are dispatched: "NEW_USER", "USER_IS_VISIBLE", "USER_IS_OUT_OF_SCENE", "USER_IS_LOST", "SKELETON_STOPPED_TRACKING", "SKELETON_CALIBRATING", "SKELETON_TRACKING", "SKELETON_CALIBRATION_FAILED", "DEVICE_INITIALIZED", "DEVICE_ERROR"
 
-In addition to events, the activity offers the "getHands()" method.  This method will give a JSON object containing a "right_hand" object and a "left_hand" object.  Each of those contain "x", "y", "z", and "active" properties.  The first three are coordinates, and the active property is a boolean indicating if the hand is currently being tracked.
+In addition to events, the activity offers the "getHands()" method.  This method will give a JSON object containing a "right_hand" object and a "left_hand" object.  Each of those contain "x", "y", "z", "active", and "percentExtended" properties.  The first three are coordinates, the active property is a boolean indicating if the hand is currently being tracked, and percent extended is the percentage (from 0-100) that the arm is extended.  This can range from around 10-20% in practice when the arm is bent and the hand is touching the shoulder - to almost 100% where the hand is as far from the shoulder as is possible.
 
 If the hand is not being tracked, the "active" boolean is false, and the last active coordinates for the hand is given.
 
