@@ -30,7 +30,9 @@ struct Joint {
     int xPos;
     int yPos;
     int zPos;
-    float orientation;
+    float xRotation;
+    float yRotation;
+    float zRotation;
     int type;
     bool isActive;
 };
