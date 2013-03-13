@@ -56,9 +56,10 @@ void onDeviceEvent(int eventType);
 void updateUserState(const nite::UserData& user, unsigned long long ts);
 void mapJointFromSkeleton(Joint &j, nite::Skeleton s);
 void mapSkeleton(Skeleton &skeleton, nite::Skeleton niteskeleton);
+Local<Object> mapJointToJSObject(char *jointName);
 
 /* NodeJS Methods */
 Handle<Value> initialize(const Arguments& args);
 Handle<Value> close(const Arguments& args);
 Handle<Value> setListener(const Arguments& args);
-Handle<Value> getHands(const Arguments& args);
+Handle<Value> getJoints(const Arguments& args);

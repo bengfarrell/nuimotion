@@ -43,13 +43,13 @@ nite::SkeletonState g_skeletonStates[MAX_USERS] = {nite::SKELETON_NONE};
  * @param plugin target
  */
 void init(Handle<Object> target) {
-    fprintf(stderr, "Hand Tracker \n");
+    fprintf(stderr, "Nui Motion Initialize \n");
     target->Set(String::NewSymbol("init"),
         FunctionTemplate::New(initialize)->GetFunction());
     target->Set(String::NewSymbol("close"),
         FunctionTemplate::New(close)->GetFunction());
-    target->Set(String::NewSymbol("getHands"),
-        FunctionTemplate::New(getHands)->GetFunction());
+    target->Set(String::NewSymbol("getJoints"),
+        FunctionTemplate::New(getJoints)->GetFunction());
 
     context_obj = Persistent<Object>::New(Object::New()); 
     target->Set(String::New("context"), context_obj); 
@@ -58,90 +58,28 @@ void init(Handle<Object> target) {
 }
 
 
-Handle<Value> getHands(const Arguments& args) {
-    float dist_lh2le = sqrt( pow(skeleton.leftHand.xPos - skeleton.leftElbow.xPos, 2) + pow(skeleton.leftHand.yPos- skeleton.leftElbow.yPos, 2) + pow(skeleton.leftHand.zPos - skeleton.leftElbow.zPos, 2) );
-    float dist_lh2ls = sqrt( pow(skeleton.leftHand.xPos - skeleton.leftShoulder.xPos, 2) + pow(skeleton.leftHand.yPos - skeleton.leftShoulder.yPos, 2) + pow(skeleton.leftHand.zPos - skeleton.leftShoulder.zPos, 2) );
-    float dist_le2ls = sqrt( pow(skeleton.leftElbow.xPos - skeleton.leftShoulder.xPos, 2) + pow(skeleton.leftElbow.yPos - skeleton.leftShoulder.yPos, 2) + pow(skeleton.leftElbow.zPos - skeleton.leftShoulder.zPos, 2) );
-
-    float dist_rh2re = sqrt( pow(skeleton.rightHand.xPos - skeleton.rightElbow.xPos, 2) + pow(skeleton.rightHand.yPos- skeleton.rightElbow.yPos, 2) + pow(skeleton.rightHand.zPos - skeleton.rightElbow.zPos, 2) );
-    float dist_rh2rs = sqrt( pow(skeleton.rightHand.xPos - skeleton.rightShoulder.xPos, 2) + pow(skeleton.rightHand.yPos - skeleton.rightShoulder.yPos, 2) + pow(skeleton.rightHand.zPos - skeleton.rightShoulder.zPos, 2) );
-    float dist_re2rs = sqrt( pow(skeleton.rightElbow.xPos - skeleton.rightShoulder.xPos, 2) + pow(skeleton.rightElbow.yPos - skeleton.rightShoulder.yPos, 2) + pow(skeleton.rightElbow.zPos - skeleton.rightShoulder.zPos, 2) );
-
-    int left_percentExtended = (int) dist_lh2ls/(dist_le2ls + dist_lh2le) *100;
-    int right_percentExtended = (int) dist_rh2rs/(dist_re2rs + dist_rh2re) *100;
-
+/**
+ * JS Call to get joints
+ * @param args - each parameter is one named joint
+ * @return object structure of joints
+ */
+Handle<Value> getJoints(const Arguments& args) {
     HandleScope scope;
-    Local<Object> lHand = Object::New(); 
-    lHand->Set(String::NewSymbol("x"), Number::New( skeleton.leftHand.xPos ));
-    lHand->Set(String::NewSymbol("y"), Number::New( skeleton.leftHand.yPos ));
-    lHand->Set(String::NewSymbol("z"), Number::New( skeleton.leftHand.zPos ));
-    lHand->Set(String::NewSymbol("xRotation"), Number::New( skeleton.leftHand.xRotation ));
-    lHand->Set(String::NewSymbol("yRotation"), Number::New( skeleton.leftHand.yRotation ));
-    lHand->Set(String::NewSymbol("zRotation"), Number::New( skeleton.leftHand.zRotation ));
-    lHand->Set(String::NewSymbol("percentExtended"), Number::New(left_percentExtended));
-    lHand->Set(String::NewSymbol("active"), Number::New( skeleton.leftHand.isActive ));
 
-    Local<Object> lElbow = Object::New(); 
-    lElbow->Set(String::NewSymbol("x"), Number::New( skeleton.leftElbow.xPos ));
-    lElbow->Set(String::NewSymbol("y"), Number::New( skeleton.leftElbow.yPos ));
-    lElbow->Set(String::NewSymbol("z"), Number::New( skeleton.leftElbow.zPos ));
-    lElbow->Set(String::NewSymbol("xRotation"), Number::New( skeleton.leftElbow.xRotation ));
-    lElbow->Set(String::NewSymbol("yRotation"), Number::New( skeleton.leftElbow.yRotation ));
-    lElbow->Set(String::NewSymbol("zRotation"), Number::New( skeleton.leftElbow.zRotation ));
-    lElbow->Set(String::NewSymbol("active"), Number::New( skeleton.leftElbow.isActive ));
+    Local<Object> skel_obj = Object::New(); 
+    for ( int c = 0; c < args.Length(); c++)
+    {   
+        if (!args[c]->IsString()) {
+            ThrowException(Exception::TypeError(String::New("Argument needs to be a string")));
+            return scope.Close(Undefined());
+        }
 
-    Local<Object> lShoulder = Object::New(); 
-    lShoulder->Set(String::NewSymbol("x"), Number::New( skeleton.leftShoulder.xPos ));
-    lShoulder->Set(String::NewSymbol("y"), Number::New( skeleton.leftShoulder.yPos ));
-    lShoulder->Set(String::NewSymbol("z"), Number::New( skeleton.leftShoulder.zPos ));
-    lShoulder->Set(String::NewSymbol("xRotation"), Number::New( skeleton.leftShoulder.xRotation ));
-    lShoulder->Set(String::NewSymbol("yRotation"), Number::New( skeleton.leftShoulder.yRotation ));
-    lShoulder->Set(String::NewSymbol("zRotation"), Number::New( skeleton.leftShoulder.zRotation ));
-    lShoulder->Set(String::NewSymbol("active"), Number::New( skeleton.leftShoulder.isActive ));
-
-    Local<Object> rHand = Object::New(); 
-    rHand->Set(String::NewSymbol("x"), Number::New( skeleton.rightHand.xPos ));
-    rHand->Set(String::NewSymbol("y"), Number::New( skeleton.rightHand.yPos ));
-    rHand->Set(String::NewSymbol("z"), Number::New( skeleton.rightHand.zPos ));
-    rHand->Set(String::NewSymbol("xRotation"), Number::New( skeleton.rightHand.xRotation ));
-    rHand->Set(String::NewSymbol("yRotation"), Number::New( skeleton.rightHand.yRotation ));
-    rHand->Set(String::NewSymbol("zRotation"), Number::New( skeleton.rightHand.zRotation ));
-    rHand->Set(String::NewSymbol("percentExtended"), Number::New(right_percentExtended));
-    rHand->Set(String::NewSymbol("active"), Number::New( skeleton.rightHand.isActive ));
-
-    Local<Object> rElbow = Object::New(); 
-    rElbow->Set(String::NewSymbol("x"), Number::New( skeleton.rightElbow.xPos ));
-    rElbow->Set(String::NewSymbol("y"), Number::New( skeleton.rightElbow.yPos ));
-    rElbow->Set(String::NewSymbol("z"), Number::New( skeleton.rightElbow.zPos ));
-    rElbow->Set(String::NewSymbol("xRotation"), Number::New( skeleton.rightElbow.xRotation ));
-    rElbow->Set(String::NewSymbol("yRotation"), Number::New( skeleton.rightElbow.yRotation ));
-    rElbow->Set(String::NewSymbol("zRotation"), Number::New( skeleton.rightElbow.zRotation ));
-    rElbow->Set(String::NewSymbol("active"), Number::New( skeleton.rightElbow.isActive ));
-
-    Local<Object> rShoulder = Object::New(); 
-    rShoulder->Set(String::NewSymbol("x"), Number::New( skeleton.rightShoulder.xPos ));
-    rShoulder->Set(String::NewSymbol("y"), Number::New( skeleton.rightShoulder.yPos ));
-    rShoulder->Set(String::NewSymbol("z"), Number::New( skeleton.rightShoulder.zPos ));
-    rShoulder->Set(String::NewSymbol("xRotation"), Number::New( skeleton.rightShoulder.xRotation ));
-    rShoulder->Set(String::NewSymbol("yRotation"), Number::New( skeleton.rightShoulder.yRotation ));
-    rShoulder->Set(String::NewSymbol("zRotation"), Number::New( skeleton.rightShoulder.zRotation ));
-    rShoulder->Set(String::NewSymbol("active"), Number::New( skeleton.rightShoulder.isActive ));
-
-    Local<Object> body = Object::New(); 
-    body->Set(String::NewSymbol("x"), Number::New( skeleton.torso.xPos ));
-    body->Set(String::NewSymbol("y"), Number::New( skeleton.torso.yPos ));
-    body->Set(String::NewSymbol("z"), Number::New( skeleton.torso.zPos ));
-    body->Set(String::NewSymbol("active"), Number::New( skeleton.torso.isActive ));
-
-    Local<Object> obj = Object::New(); 
-    obj->Set(String::NewSymbol("right_hand"), rHand); 
-    obj->Set(String::NewSymbol("right_elbow"), rElbow); 
-    obj->Set(String::NewSymbol("right_shoulder"), rShoulder);  
-    obj->Set(String::NewSymbol("left_hand"), lHand);   
-    obj->Set(String::NewSymbol("left_elbow"), lElbow); 
-    obj->Set(String::NewSymbol("left_shoulder"), lShoulder);      
-    obj->Set(String::NewSymbol("body_center"), body);    
-    return scope.Close(obj);
+        String::Utf8Value utfStr(args[c]->ToString());
+        char* s = (char*) *utfStr;
+        Local<Object> joint = mapJointToJSObject(s);
+        skel_obj->Set(String::NewSymbol(s), joint ); 
+    }
+    return scope.Close(skel_obj);
 }
 
 
@@ -277,7 +215,7 @@ Handle<Value> initialize(const Arguments& args) {
         onDeviceEvent(DEVICE_ERROR);
         return scope.Close(Undefined());
     }
-    fprintf(stderr,"\nStart moving around to get detected...\n(PSI pose may be required for skeleton calibration, depending on the configuration)\n");
+    fprintf(stderr,"Start moving around to get detected...\n(PSI pose may be required for skeleton calibration, depending on the configuration)\n");
 
     niteRc = handTracker.create();
     if (niteRc != nite::STATUS_OK)
@@ -410,6 +348,63 @@ void frameWorker(uv_work_t *req) {
     }
 }
 
+Local<Object> mapJointToJSObject(char *jointName) {
+    Local<Object> jsJoint = Object::New();
+
+    int left_percentExtended = -1;
+    int right_percentExtended = -1;
+    Joint j;
+
+    if (strcmp( jointName, "torso") == 0) {
+        j = skeleton.torso; 
+    } else if (strcmp( jointName, "head") == 0) {
+        j = skeleton.head; 
+    } else if (strcmp( jointName, "left_hand") == 0) {
+        j = skeleton.leftHand; 
+        float dist_lh2le = sqrt( pow(skeleton.leftHand.xPos - skeleton.leftElbow.xPos, 2) + pow(skeleton.leftHand.yPos- skeleton.leftElbow.yPos, 2) + pow(skeleton.leftHand.zPos - skeleton.leftElbow.zPos, 2) );
+        float dist_lh2ls = sqrt( pow(skeleton.leftHand.xPos - skeleton.leftShoulder.xPos, 2) + pow(skeleton.leftHand.yPos - skeleton.leftShoulder.yPos, 2) + pow(skeleton.leftHand.zPos - skeleton.leftShoulder.zPos, 2) );
+        float dist_le2ls = sqrt( pow(skeleton.leftElbow.xPos - skeleton.leftShoulder.xPos, 2) + pow(skeleton.leftElbow.yPos - skeleton.leftShoulder.yPos, 2) + pow(skeleton.leftElbow.zPos - skeleton.leftShoulder.zPos, 2) );
+        left_percentExtended = (int) dist_lh2ls/(dist_le2ls + dist_lh2le) *100;
+    } else if (strcmp( jointName, "left_elbow") == 0) {
+        j = skeleton.leftElbow; 
+    } else if (strcmp( jointName, "left_shoulder") == 0) {
+        j = skeleton.leftElbow; 
+    } else if (strcmp( jointName, "left_hip") == 0) {
+        j = skeleton.leftHip; 
+    } else if (strcmp( jointName, "right_hand") == 0) {
+        float dist_rh2re = sqrt( pow(skeleton.rightHand.xPos - skeleton.rightElbow.xPos, 2) + pow(skeleton.rightHand.yPos- skeleton.rightElbow.yPos, 2) + pow(skeleton.rightHand.zPos - skeleton.rightElbow.zPos, 2) );
+        float dist_rh2rs = sqrt( pow(skeleton.rightHand.xPos - skeleton.rightShoulder.xPos, 2) + pow(skeleton.rightHand.yPos - skeleton.rightShoulder.yPos, 2) + pow(skeleton.rightHand.zPos - skeleton.rightShoulder.zPos, 2) );
+        float dist_re2rs = sqrt( pow(skeleton.rightElbow.xPos - skeleton.rightShoulder.xPos, 2) + pow(skeleton.rightElbow.yPos - skeleton.rightShoulder.yPos, 2) + pow(skeleton.rightElbow.zPos - skeleton.rightShoulder.zPos, 2) );
+        right_percentExtended = (int) dist_rh2rs/(dist_re2rs + dist_rh2re) *100;
+        j = skeleton.rightHand; 
+    } else if (strcmp( jointName, "right_elbow") == 0) {
+        j = skeleton.rightElbow; 
+    } else if (strcmp( jointName, "right_shoulder") == 0) {
+        j = skeleton.rightElbow; 
+    } else if (strcmp( jointName, "right_hip") == 0) {
+        j = skeleton.rightHip; 
+    } else {
+        j = Joint();
+    }
+
+    jsJoint->Set(String::NewSymbol("x"), Number::New( j.xPos ));
+    jsJoint->Set(String::NewSymbol("y"), Number::New( j.yPos ));
+    jsJoint->Set(String::NewSymbol("z"), Number::New( j.zPos ));
+    jsJoint->Set(String::NewSymbol("xRotation"), Number::New( j.xRotation ));
+    jsJoint->Set(String::NewSymbol("yRotation"), Number::New( j.yRotation ));
+    jsJoint->Set(String::NewSymbol("zRotation"), Number::New( j.zRotation ));
+
+    if (j.type == nite::JOINT_LEFT_HAND) {
+       jsJoint->Set(String::NewSymbol("percentExtended"), Number::New(left_percentExtended)); 
+    } else if (j.type == nite::JOINT_RIGHT_HAND) {
+       jsJoint->Set(String::NewSymbol("percentExtended"), Number::New(right_percentExtended));  
+    }
+
+    jsJoint->Set(String::NewSymbol("active"), Number::New( j.isActive ));
+
+    return jsJoint;
+}
+
 /**
  * map skeleton to internal skeleyon struct
  *
@@ -441,6 +436,7 @@ void mapJointFromSkeleton(Joint &j, nite::Skeleton s) {
     j.zPos = (int) s.getJoint( (nite::JointType) j.type).getPosition().z;
 
     const nite::Quaternion &o = s.getJoint( (nite::JointType) j.type).getOrientation();
+
     j.xRotation = atan2(2*o.y*o.w-2*o.x*o.z , 1 - 2*pow(o.y,2) - 2*pow(o.z, 2)) * (180/PI);
     j.yRotation = asin(2*o.x*o.y + 2*o.z*o.w) * (180/PI);
     j.zRotation = atan2(2*o.x*o.w-2*o.y*o.z , 1 - 2*pow(o.x, 2) - 2*pow(o.z, 2)) * (180/PI);
