@@ -14,21 +14,11 @@
 #include "../enums/Skeleton.h"
 #include "../enums/Joint.h"
 #include "../enums/GestureTypes.h"
+#include "../enums/EventTypes.h"
 #include "../gestures/GestureRecognizer.c"
 #include "../Common/NiteSampleUtilities.h"
 
 using namespace v8;
-
-static const int NEW_USER = 1;
-static const int USER_IS_VISIBLE = 2;
-static const int USER_IS_OUT_OF_SCENE = 3;
-static const int USER_IS_LOST = 4;
-static const int SKELETON_STOPPED_TRACKING = 5;
-static const int SKELETON_CALIBRATING = 6;
-static const int SKELETON_TRACKING = 7;
-static const int SKELETON_CALIBRATION_FAILED = 8;
-static const int DEVICE_INITIALIZED = 100;
-static const int DEVICE_ERROR = 101;
 
 #define PI 3.141592
 
