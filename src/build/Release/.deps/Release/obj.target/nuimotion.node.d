@@ -1,0 +1,1 @@
+cmd_Release/obj.target/nuimotion.node := flock ./Release/linker.lock g++ -shared -pthread -rdynamic -m64  -Wl,-soname=nuimotion.node -o Release/obj.target/nuimotion.node -Wl,--start-group Release/obj.target/nuimotion/Main.o -Wl,--end-group -lOpenNI2 -lNiTE2 -Wl,-rpath ./

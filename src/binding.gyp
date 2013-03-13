@@ -15,28 +15,11 @@
             }
         ]
     ],
-  "targets": [
+    
+    "targets": [
     {
-        "target_name": "sweatin",
-        "sources": [ "sweatin.cpp" ],
-        "include_dirs": [ "./Include"],
-
-        # -Wl,-rpath will warn of failure on Windows, don't worry - it's a Linux thing, let it fail
-        "libraries": ["-l<(ONI_Root)OpenNI2", "-l<(ONI_Root)NiTE2", "-Wl,-rpath ./"]
-    },
-
-    {
-        "target_name": "followthehand",
-        "sources": [ "followthehand.cpp" ],
-        "include_dirs": [ "./Include"],
-
-        # -Wl,-rpath will warn of failure on Windows, don't worry - it's a Linux thing, let it fail
-        "libraries": ["-l<(ONI_Root)OpenNI2", "-l<(ONI_Root)NiTE2", "-Wl,-rpath ./"]
-    },
-
-    {
-        "target_name": "handtracker",
-        "sources": [ "handtracker.cpp" ],
+        "target_name": "nuimotion",
+        "sources": [ "Main.cpp" ],
         "include_dirs": [ "./Include"],
 
         # -Wl,-rpath will warn of failure on Windows, don't worry - it's a Linux thing, let it fail

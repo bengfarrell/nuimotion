@@ -10,8 +10,11 @@
 #include <math.h>
 
 #include "NiTE.h"
-#include "handtracker.h"
-
+#include "Main.h"
+#include "../enums/Skeleton.h"
+#include "../enums/Joint.h"
+#include "../enums/GestureTypes.h"
+#include "../gestures/GestureRecognizer.c"
 #include "../Common/NiteSampleUtilities.h"
 
 using namespace v8;
@@ -50,83 +53,85 @@ void init(Handle<Object> target) {
 
     context_obj = Persistent<Object>::New(Object::New()); 
     target->Set(String::New("context"), context_obj); 
+
+    gst = GestureRecognizer();
 }
 
 
 Handle<Value> getHands(const Arguments& args) {
-    float dist_lh2le = sqrt( pow(joint_leftHand.xPos - joint_leftElbow.xPos, 2) + pow(joint_leftHand.yPos- joint_leftElbow.yPos, 2) + pow(joint_leftHand.zPos - joint_leftElbow.zPos, 2) );
-    float dist_lh2ls = sqrt( pow(joint_leftHand.xPos - joint_leftShoulder.xPos, 2) + pow(joint_leftHand.yPos - joint_leftShoulder.yPos, 2) + pow(joint_leftHand.zPos - joint_leftShoulder.zPos, 2) );
-    float dist_le2ls = sqrt( pow(joint_leftElbow.xPos - joint_leftShoulder.xPos, 2) + pow(joint_leftElbow.yPos - joint_leftShoulder.yPos, 2) + pow(joint_leftElbow.zPos - joint_leftShoulder.zPos, 2) );
+    float dist_lh2le = sqrt( pow(skeleton.leftHand.xPos - skeleton.leftElbow.xPos, 2) + pow(skeleton.leftHand.yPos- skeleton.leftElbow.yPos, 2) + pow(skeleton.leftHand.zPos - skeleton.leftElbow.zPos, 2) );
+    float dist_lh2ls = sqrt( pow(skeleton.leftHand.xPos - skeleton.leftShoulder.xPos, 2) + pow(skeleton.leftHand.yPos - skeleton.leftShoulder.yPos, 2) + pow(skeleton.leftHand.zPos - skeleton.leftShoulder.zPos, 2) );
+    float dist_le2ls = sqrt( pow(skeleton.leftElbow.xPos - skeleton.leftShoulder.xPos, 2) + pow(skeleton.leftElbow.yPos - skeleton.leftShoulder.yPos, 2) + pow(skeleton.leftElbow.zPos - skeleton.leftShoulder.zPos, 2) );
 
-    float dist_rh2re = sqrt( pow(joint_rightHand.xPos - joint_rightElbow.xPos, 2) + pow(joint_rightHand.yPos- joint_rightElbow.yPos, 2) + pow(joint_rightHand.zPos - joint_rightElbow.zPos, 2) );
-    float dist_rh2rs = sqrt( pow(joint_rightHand.xPos - joint_rightShoulder.xPos, 2) + pow(joint_rightHand.yPos - joint_rightShoulder.yPos, 2) + pow(joint_rightHand.zPos - joint_rightShoulder.zPos, 2) );
-    float dist_re2rs = sqrt( pow(joint_rightElbow.xPos - joint_rightShoulder.xPos, 2) + pow(joint_rightElbow.yPos - joint_rightShoulder.yPos, 2) + pow(joint_rightElbow.zPos - joint_rightShoulder.zPos, 2) );
+    float dist_rh2re = sqrt( pow(skeleton.rightHand.xPos - skeleton.rightElbow.xPos, 2) + pow(skeleton.rightHand.yPos- skeleton.rightElbow.yPos, 2) + pow(skeleton.rightHand.zPos - skeleton.rightElbow.zPos, 2) );
+    float dist_rh2rs = sqrt( pow(skeleton.rightHand.xPos - skeleton.rightShoulder.xPos, 2) + pow(skeleton.rightHand.yPos - skeleton.rightShoulder.yPos, 2) + pow(skeleton.rightHand.zPos - skeleton.rightShoulder.zPos, 2) );
+    float dist_re2rs = sqrt( pow(skeleton.rightElbow.xPos - skeleton.rightShoulder.xPos, 2) + pow(skeleton.rightElbow.yPos - skeleton.rightShoulder.yPos, 2) + pow(skeleton.rightElbow.zPos - skeleton.rightShoulder.zPos, 2) );
 
     int left_percentExtended = (int) dist_lh2ls/(dist_le2ls + dist_lh2le) *100;
     int right_percentExtended = (int) dist_rh2rs/(dist_re2rs + dist_rh2re) *100;
 
     HandleScope scope;
     Local<Object> lHand = Object::New(); 
-    lHand->Set(String::NewSymbol("x"), Number::New( joint_leftHand.xPos ));
-    lHand->Set(String::NewSymbol("y"), Number::New( joint_leftHand.yPos ));
-    lHand->Set(String::NewSymbol("z"), Number::New( joint_leftHand.zPos ));
-    lHand->Set(String::NewSymbol("xRotation"), Number::New( joint_leftHand.xRotation ));
-    lHand->Set(String::NewSymbol("yRotation"), Number::New( joint_leftHand.yRotation ));
-    lHand->Set(String::NewSymbol("zRotation"), Number::New( joint_leftHand.zRotation ));
+    lHand->Set(String::NewSymbol("x"), Number::New( skeleton.leftHand.xPos ));
+    lHand->Set(String::NewSymbol("y"), Number::New( skeleton.leftHand.yPos ));
+    lHand->Set(String::NewSymbol("z"), Number::New( skeleton.leftHand.zPos ));
+    lHand->Set(String::NewSymbol("xRotation"), Number::New( skeleton.leftHand.xRotation ));
+    lHand->Set(String::NewSymbol("yRotation"), Number::New( skeleton.leftHand.yRotation ));
+    lHand->Set(String::NewSymbol("zRotation"), Number::New( skeleton.leftHand.zRotation ));
     lHand->Set(String::NewSymbol("percentExtended"), Number::New(left_percentExtended));
-    lHand->Set(String::NewSymbol("active"), Number::New( joint_leftHand.isActive ));
+    lHand->Set(String::NewSymbol("active"), Number::New( skeleton.leftHand.isActive ));
 
     Local<Object> lElbow = Object::New(); 
-    lElbow->Set(String::NewSymbol("x"), Number::New( joint_leftElbow.xPos ));
-    lElbow->Set(String::NewSymbol("y"), Number::New( joint_leftElbow.yPos ));
-    lElbow->Set(String::NewSymbol("z"), Number::New( joint_leftElbow.zPos ));
-    lElbow->Set(String::NewSymbol("xRotation"), Number::New( joint_leftElbow.xRotation ));
-    lElbow->Set(String::NewSymbol("yRotation"), Number::New( joint_leftElbow.yRotation ));
-    lElbow->Set(String::NewSymbol("zRotation"), Number::New( joint_leftElbow.zRotation ));
-    lElbow->Set(String::NewSymbol("active"), Number::New( joint_leftElbow.isActive ));
+    lElbow->Set(String::NewSymbol("x"), Number::New( skeleton.leftElbow.xPos ));
+    lElbow->Set(String::NewSymbol("y"), Number::New( skeleton.leftElbow.yPos ));
+    lElbow->Set(String::NewSymbol("z"), Number::New( skeleton.leftElbow.zPos ));
+    lElbow->Set(String::NewSymbol("xRotation"), Number::New( skeleton.leftElbow.xRotation ));
+    lElbow->Set(String::NewSymbol("yRotation"), Number::New( skeleton.leftElbow.yRotation ));
+    lElbow->Set(String::NewSymbol("zRotation"), Number::New( skeleton.leftElbow.zRotation ));
+    lElbow->Set(String::NewSymbol("active"), Number::New( skeleton.leftElbow.isActive ));
 
     Local<Object> lShoulder = Object::New(); 
-    lShoulder->Set(String::NewSymbol("x"), Number::New( joint_leftShoulder.xPos ));
-    lShoulder->Set(String::NewSymbol("y"), Number::New( joint_leftShoulder.yPos ));
-    lShoulder->Set(String::NewSymbol("z"), Number::New( joint_leftShoulder.zPos ));
-    lShoulder->Set(String::NewSymbol("xRotation"), Number::New( joint_leftShoulder.xRotation ));
-    lShoulder->Set(String::NewSymbol("yRotation"), Number::New( joint_leftShoulder.yRotation ));
-    lShoulder->Set(String::NewSymbol("zRotation"), Number::New( joint_leftShoulder.zRotation ));
-    lShoulder->Set(String::NewSymbol("active"), Number::New( joint_leftShoulder.isActive ));
+    lShoulder->Set(String::NewSymbol("x"), Number::New( skeleton.leftShoulder.xPos ));
+    lShoulder->Set(String::NewSymbol("y"), Number::New( skeleton.leftShoulder.yPos ));
+    lShoulder->Set(String::NewSymbol("z"), Number::New( skeleton.leftShoulder.zPos ));
+    lShoulder->Set(String::NewSymbol("xRotation"), Number::New( skeleton.leftShoulder.xRotation ));
+    lShoulder->Set(String::NewSymbol("yRotation"), Number::New( skeleton.leftShoulder.yRotation ));
+    lShoulder->Set(String::NewSymbol("zRotation"), Number::New( skeleton.leftShoulder.zRotation ));
+    lShoulder->Set(String::NewSymbol("active"), Number::New( skeleton.leftShoulder.isActive ));
 
     Local<Object> rHand = Object::New(); 
-    rHand->Set(String::NewSymbol("x"), Number::New( joint_rightHand.xPos ));
-    rHand->Set(String::NewSymbol("y"), Number::New( joint_rightHand.yPos ));
-    rHand->Set(String::NewSymbol("z"), Number::New( joint_rightHand.zPos ));
-    rHand->Set(String::NewSymbol("xRotation"), Number::New( joint_rightHand.xRotation ));
-    rHand->Set(String::NewSymbol("yRotation"), Number::New( joint_rightHand.yRotation ));
-    rHand->Set(String::NewSymbol("zRotation"), Number::New( joint_rightHand.zRotation ));
+    rHand->Set(String::NewSymbol("x"), Number::New( skeleton.rightHand.xPos ));
+    rHand->Set(String::NewSymbol("y"), Number::New( skeleton.rightHand.yPos ));
+    rHand->Set(String::NewSymbol("z"), Number::New( skeleton.rightHand.zPos ));
+    rHand->Set(String::NewSymbol("xRotation"), Number::New( skeleton.rightHand.xRotation ));
+    rHand->Set(String::NewSymbol("yRotation"), Number::New( skeleton.rightHand.yRotation ));
+    rHand->Set(String::NewSymbol("zRotation"), Number::New( skeleton.rightHand.zRotation ));
     rHand->Set(String::NewSymbol("percentExtended"), Number::New(right_percentExtended));
-    rHand->Set(String::NewSymbol("active"), Number::New( joint_rightHand.isActive ));
+    rHand->Set(String::NewSymbol("active"), Number::New( skeleton.rightHand.isActive ));
 
     Local<Object> rElbow = Object::New(); 
-    rElbow->Set(String::NewSymbol("x"), Number::New( joint_rightElbow.xPos ));
-    rElbow->Set(String::NewSymbol("y"), Number::New( joint_rightElbow.yPos ));
-    rElbow->Set(String::NewSymbol("z"), Number::New( joint_rightElbow.zPos ));
-    rElbow->Set(String::NewSymbol("xRotation"), Number::New( joint_rightElbow.xRotation ));
-    rElbow->Set(String::NewSymbol("yRotation"), Number::New( joint_rightElbow.yRotation ));
-    rElbow->Set(String::NewSymbol("zRotation"), Number::New( joint_rightElbow.zRotation ));
-    rElbow->Set(String::NewSymbol("active"), Number::New( joint_rightElbow.isActive ));
+    rElbow->Set(String::NewSymbol("x"), Number::New( skeleton.rightElbow.xPos ));
+    rElbow->Set(String::NewSymbol("y"), Number::New( skeleton.rightElbow.yPos ));
+    rElbow->Set(String::NewSymbol("z"), Number::New( skeleton.rightElbow.zPos ));
+    rElbow->Set(String::NewSymbol("xRotation"), Number::New( skeleton.rightElbow.xRotation ));
+    rElbow->Set(String::NewSymbol("yRotation"), Number::New( skeleton.rightElbow.yRotation ));
+    rElbow->Set(String::NewSymbol("zRotation"), Number::New( skeleton.rightElbow.zRotation ));
+    rElbow->Set(String::NewSymbol("active"), Number::New( skeleton.rightElbow.isActive ));
 
     Local<Object> rShoulder = Object::New(); 
-    rShoulder->Set(String::NewSymbol("x"), Number::New( joint_rightShoulder.xPos ));
-    rShoulder->Set(String::NewSymbol("y"), Number::New( joint_rightShoulder.yPos ));
-    rShoulder->Set(String::NewSymbol("z"), Number::New( joint_rightShoulder.zPos ));
-    rShoulder->Set(String::NewSymbol("xRotation"), Number::New( joint_rightShoulder.xRotation ));
-    rShoulder->Set(String::NewSymbol("yRotation"), Number::New( joint_rightShoulder.yRotation ));
-    rShoulder->Set(String::NewSymbol("zRotation"), Number::New( joint_rightShoulder.zRotation ));
-    rShoulder->Set(String::NewSymbol("active"), Number::New( joint_rightShoulder.isActive ));
+    rShoulder->Set(String::NewSymbol("x"), Number::New( skeleton.rightShoulder.xPos ));
+    rShoulder->Set(String::NewSymbol("y"), Number::New( skeleton.rightShoulder.yPos ));
+    rShoulder->Set(String::NewSymbol("z"), Number::New( skeleton.rightShoulder.zPos ));
+    rShoulder->Set(String::NewSymbol("xRotation"), Number::New( skeleton.rightShoulder.xRotation ));
+    rShoulder->Set(String::NewSymbol("yRotation"), Number::New( skeleton.rightShoulder.yRotation ));
+    rShoulder->Set(String::NewSymbol("zRotation"), Number::New( skeleton.rightShoulder.zRotation ));
+    rShoulder->Set(String::NewSymbol("active"), Number::New( skeleton.rightShoulder.isActive ));
 
     Local<Object> body = Object::New(); 
-    body->Set(String::NewSymbol("x"), Number::New( joint_bodyCenter.xPos ));
-    body->Set(String::NewSymbol("y"), Number::New( joint_bodyCenter.yPos ));
-    body->Set(String::NewSymbol("z"), Number::New( joint_bodyCenter.zPos ));
-    body->Set(String::NewSymbol("active"), Number::New( joint_bodyCenter.isActive ));
+    body->Set(String::NewSymbol("x"), Number::New( skeleton.torso.xPos ));
+    body->Set(String::NewSymbol("y"), Number::New( skeleton.torso.yPos ));
+    body->Set(String::NewSymbol("z"), Number::New( skeleton.torso.zPos ));
+    body->Set(String::NewSymbol("active"), Number::New( skeleton.torso.isActive ));
 
     Local<Object> obj = Object::New(); 
     obj->Set(String::NewSymbol("right_hand"), rHand); 
@@ -205,7 +210,24 @@ void onTrackingEvent(uv_async_t *handle, int status /*UNUSED*/) {
             eventString = String::New("SKELETON_CALIBRATION_FAILED");
             lastSkeletalEventDispatched = currentSkeletonState;
             break; 
+        case SWIPE_LEFT:
+            eventString = String::New("GESTURE_SWIPE_LEFT");
+            break;
+        case SWIPE_RIGHT:
+            eventString = String::New("GESTURE_SWIPE_RIGHT");
+            break;
+        case SWIPE_UP:
+            eventString = String::New("GESTURE_SWIPE_UP");
+            break;
+        case SWIPE_DOWN:
+            eventString = String::New("GESTURE_SWIPE_DOWN");
+            break;
+        case WAVE:
+            eventString = String::New("GESTURE_WAVE");
+            break;
+
         default:
+            fprintf(stderr, "Event type error %d \n", event);
             eventString = String::New("No known event type found");
             break; 
     }
@@ -257,22 +279,39 @@ Handle<Value> initialize(const Arguments& args) {
     }
     fprintf(stderr,"\nStart moving around to get detected...\n(PSI pose may be required for skeleton calibration, depending on the configuration)\n");
 
+    niteRc = handTracker.create();
+    if (niteRc != nite::STATUS_OK)
+    {
+        fprintf(stderr, "Couldn't create hand tracker\n");
+        return scope.Close( Undefined() );
+    }
+    handTracker.startGestureDetection(nite::GESTURE_WAVE);
+
     keepWorkerRunning = true;
-    joint_leftHand.isActive = false;
-    joint_leftHand.type = nite::JOINT_LEFT_HAND;
-    joint_leftElbow.isActive = false;
-    joint_leftElbow.type = nite::JOINT_LEFT_ELBOW;
-    joint_leftShoulder.isActive = false;
-    joint_leftShoulder.type = nite::JOINT_LEFT_SHOULDER;
+    skeleton.leftHand.isActive = false;
+    skeleton.leftHand.type = nite::JOINT_LEFT_HAND;
+    skeleton.leftElbow.isActive = false;
+    skeleton.leftElbow.type = nite::JOINT_LEFT_ELBOW;
+    skeleton.leftShoulder.isActive = false;
+    skeleton.leftShoulder.type = nite::JOINT_LEFT_SHOULDER;
 
-    joint_rightHand.isActive = false;
-    joint_rightHand.type = nite::JOINT_RIGHT_HAND;
-    joint_rightElbow.isActive = false;
-    joint_rightElbow.type = nite::JOINT_RIGHT_ELBOW;
-    joint_rightShoulder.type = nite::JOINT_RIGHT_SHOULDER;
+    skeleton.rightHand.isActive = false;
+    skeleton.rightHand.type = nite::JOINT_RIGHT_HAND;
+    skeleton.rightElbow.isActive = false;
+    skeleton.rightElbow.type = nite::JOINT_RIGHT_ELBOW;
+    skeleton.rightShoulder.type = nite::JOINT_RIGHT_SHOULDER;
 
-    joint_bodyCenter.isActive = false;
-    joint_bodyCenter.type = nite::JOINT_TORSO;
+    skeleton.torso.isActive = false;
+    skeleton.torso.type = nite::JOINT_TORSO;
+
+    skeleton.head.isActive = false;
+    skeleton.head.type = nite::JOINT_HEAD;
+
+    skeleton.leftHip.isActive = false;
+    skeleton.leftHip.type = nite::JOINT_LEFT_HIP;
+
+    skeleton.rightHip.isActive = false;
+    skeleton.rightHip.type = nite::JOINT_RIGHT_HIP;
 
     onDeviceEvent(DEVICE_INITIALIZED);
     
@@ -303,13 +342,23 @@ void onFrameWorkerThreadComplete(uv_work_t *req) {
  */
 void frameWorker(uv_work_t *req) {
     int userEventType = 0;
+    int gestureType = 0;
     while (keepWorkerRunning) {
         nite::Status niteRc;
         nite::UserTrackerFrameRef userTrackerFrame;
         niteRc = userTracker.readFrame(&userTrackerFrame);
+
         if (niteRc != nite::STATUS_OK)
         {
             fprintf(stderr,"Get next frame failed\n");
+            continue;
+        }
+
+        nite::HandTrackerFrameRef handTrackerFrame;
+        niteRc = handTracker.readFrame(&handTrackerFrame);
+        if (niteRc != nite::STATUS_OK)
+        {
+            fprintf(stderr,"Hand track frame failed\n");
             continue;
         }
 
@@ -322,27 +371,62 @@ void frameWorker(uv_work_t *req) {
             if (user.isNew())
             {
                 userTracker.startSkeletonTracking(user.getId());
-                joint_leftHand.isActive = false;
-                joint_leftElbow.isActive = false;
-                joint_leftShoulder.isActive = false;
-                joint_rightHand.isActive = false;
-                joint_rightElbow.isActive = false;
-                joint_rightShoulder.isActive = false;
-                joint_bodyCenter.isActive = false;
+                skeleton.leftHand.isActive = false;
+                skeleton.leftElbow.isActive = false;
+                skeleton.leftShoulder.isActive = false;
+                skeleton.rightHand.isActive = false;
+                skeleton.rightElbow.isActive = false;
+                skeleton.rightShoulder.isActive = false;
+                skeleton.head.isActive = false;
+                skeleton.torso.isActive = false;
+                skeleton.rightHip.isActive = false;
+                skeleton.leftHip.isActive = false;
             } 
             else if (user.getSkeleton().getState() == nite::SKELETON_TRACKED)
             {
-                const nite::Skeleton &skeleton = user.getSkeleton();
-                mapJointFromSkeleton(joint_leftHand, skeleton);
-                mapJointFromSkeleton(joint_leftElbow, skeleton);
-                mapJointFromSkeleton(joint_leftShoulder, skeleton);
-                mapJointFromSkeleton(joint_rightHand, skeleton);
-                mapJointFromSkeleton(joint_rightElbow, skeleton);
-                mapJointFromSkeleton(joint_rightShoulder, skeleton);
-                mapJointFromSkeleton(joint_bodyCenter, skeleton);
+                const nite::Skeleton &niteskeleton = user.getSkeleton();
+                mapSkeleton(skeleton, niteskeleton);
+                gestureType = gst.updateSkeleton(skeleton);
+
+                if (gestureType != NO_GESTURE) {
+                    async.data = (void*) &gestureType;
+                    uv_async_send(&async);
+                }
+            }
+        }
+
+        const nite::Array<nite::GestureData>& gestures = handTrackerFrame.getGestures();
+        for (int i = 0; i < gestures.getSize(); ++i)
+        {
+            if (gestures[i].isComplete())
+            {
+                if (gestures[i].getType() == nite::GESTURE_WAVE) {
+                    gestureType = WAVE;
+                    async.data = (void*) &gestureType;
+                    uv_async_send(&async);
+                }
             }
         }
     }
+}
+
+/**
+ * map skeleton to internal skeleyon struct
+ *
+ * Skeleton skeleton
+ * nite::Skeleton niteskeleton
+ */
+void mapSkeleton(Skeleton &skeleton, nite::Skeleton niteskeleton) {
+    mapJointFromSkeleton(skeleton.leftHand, niteskeleton);
+    mapJointFromSkeleton(skeleton.leftElbow, niteskeleton);
+    mapJointFromSkeleton(skeleton.leftShoulder, niteskeleton);
+    mapJointFromSkeleton(skeleton.rightHand, niteskeleton);
+    mapJointFromSkeleton(skeleton.rightElbow, niteskeleton);
+    mapJointFromSkeleton(skeleton.rightShoulder, niteskeleton);
+    mapJointFromSkeleton(skeleton.torso, niteskeleton);
+    mapJointFromSkeleton(skeleton.head, niteskeleton);
+    mapJointFromSkeleton(skeleton.leftHip, niteskeleton);
+    mapJointFromSkeleton(skeleton.rightHip, niteskeleton);
 }
 
 /**
@@ -420,4 +504,4 @@ void updateUserState(const nite::UserData& user, unsigned long long ts)
 }
 
 /* Module Declaration */
-NODE_MODULE(handtracker, init)
+NODE_MODULE(nuimotion, init)

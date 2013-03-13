@@ -5,6 +5,9 @@
 #include <string>
 
 #include "NiTE.h"
+#include "../enums/Skeleton.h"
+#include "../enums/Joint.h"
+#include "../gestures/GestureRecognizer.c"
 
 #include "../Common/NiteSampleUtilities.h"
 
@@ -22,41 +25,17 @@ Persistent<Object> context_obj;
 /** user tracker */
 nite::UserTracker userTracker;
 
+/* hand tracker */
+nite::HandTracker handTracker;
+
 /** boolean that indicates if worker thread should keep running */
 bool keepWorkerRunning;
 
-/** Joint structure */
-struct Joint {
-    int xPos;
-    int yPos;
-    int zPos;
-    float xRotation;
-    float yRotation;
-    float zRotation;
-    int type;
-    bool isActive;
-};
+/** skeleton */
+Skeleton skeleton;
 
-/** left hand skeletal joint */
-Joint joint_leftHand;
-
-/** left shoulder joint */
-Joint joint_leftShoulder;
-
-/** left elbow joint */
-Joint joint_leftElbow;
-
-/** right hand skeletal joint */
-Joint joint_rightHand;
-
-/** right shoulder skeletal joint */
-Joint joint_rightShoulder;
-
-/** right elbow skeletal joint */
-Joint joint_rightElbow;
-
-/** torso/body center */
-Joint joint_bodyCenter;
+/** gesture recognizer */
+GestureRecognizer gst;
 
 /** last user event type dispatched */
 int lastUserEventDispatched;
@@ -75,7 +54,8 @@ void onFrameWorkerThreadComplete(uv_work_t* req);
 void onTrackingEvent(uv_async_t *handle, int status /*UNUSED*/);
 void onDeviceEvent(int eventType); 
 void updateUserState(const nite::UserData& user, unsigned long long ts);
-void mapJointFromSkeleton(Joint &j, nite::Skeleton s) ;
+void mapJointFromSkeleton(Joint &j, nite::Skeleton s);
+void mapSkeleton(Skeleton &skeleton, nite::Skeleton niteskeleton);
 
 /* NodeJS Methods */
 Handle<Value> initialize(const Arguments& args);

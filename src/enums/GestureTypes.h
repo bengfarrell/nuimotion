@@ -1,0 +1,13 @@
+#ifndef GESTURETYPES_H
+#define GESTURETYPES_H
+
+enum
+{
+  NO_GESTURE = 1000,
+  SWIPE_LEFT = 1001,
+  SWIPE_RIGHT = 1002,
+  SWIPE_UP = 1003,
+  SWIPE_DOWN = 1004,
+  WAVE = 1005
+};
+#endif
