@@ -7,6 +7,7 @@
 #include "NiTE.h"
 #include "../enums/Skeleton.h"
 #include "../enums/Joint.h"
+#include "../enums/EventTypes.h"
 #include "../gestures/GestureRecognizer.c"
 
 #include "../Common/NiteSampleUtilities.h"
