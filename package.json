@@ -1,6 +1,6 @@
 {
-  "name": "sweatin",
-  "description": "Sweatin' to the Web - Depth Sensor bindings for web use",
+  "name": "NUIMotion",
+  "description": "NuiMotion - Depth Sensor bindings for your Natural User Interaction web use",
   "keywords": [
     "openni",
     "kinect",
@@ -19,7 +19,7 @@
   "version": "0.0.1",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bengfarrell/node-sweatintotheweb"
+    "url": "https://github.com/bengfarrell/nuimotion"
   },
   "engines": {
     "node": ">=0.6.10"
@@ -36,9 +36,9 @@
   },
   "readme": "",
   "readmeFilename": "README.md",
-  "_id": "sweatin@0.0.1",
+  "_id": "nuimotion@0.0.1",
   "dist": {
     "shasum": "xxxx"
   },
-  "_from": "sweatin"
+  "_from": "nuimotion"
 }

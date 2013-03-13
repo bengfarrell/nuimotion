@@ -1,1 +1,1 @@
-module.exports = require('./src/build/Release/sweatin.node');
+module.exports = require('./src/build/Release/nuimotion.node');
