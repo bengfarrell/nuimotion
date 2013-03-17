@@ -14,7 +14,10 @@
 #include "../enums/Skeleton.h"
 #include "../enums/Joint.h"
 #include "../enums/GestureTypes.h"
+#include "../enums/ErrorTypes.h"
 #include "../enums/EventTypes.h"
+#include "../enums/EnumMapping.h"
+
 #include "../gestures/GestureRecognizer.c"
 #include "../Common/NiteSampleUtilities.h"
 
@@ -49,7 +52,7 @@ void init(Handle<Object> target) {
 
 
 /**
- * JS Call to get joints
+ * NodeJS Call to get joints
  * @param args - each parameter is one named joint
  * @return object structure of joints
  */
@@ -59,108 +62,43 @@ Handle<Value> getJoints(const Arguments& args) {
     Local<Object> skel_obj = Object::New(); 
     for ( int c = 0; c < args.Length(); c++)
     {   
+        // Argument is not a string - call shenanigans on the whole operation
         if (!args[c]->IsString()) {
             ThrowException(Exception::TypeError(String::New("Argument needs to be a string")));
             return scope.Close(Undefined());
         }
 
+        // get Joint struct mapping for string
+        // if found map the NodeJS Object on to the overall data structure going out
         String::Utf8Value utfStr(args[c]->ToString());
         char* s = (char*) *utfStr;
-        Local<Object> joint = mapJointToJSObject(s);
+        Local<Object> joint = mapJointToNodeObject(s);
         skel_obj->Set(String::NewSymbol(s), joint ); 
     }
     return scope.Close(skel_obj);
 }
 
-
 /**
- * on device event
+ * send event to Node
  *
  * @param event type
  */
-void onDeviceEvent(int eventType) {
-    Local <String> eventString;
-    switch (eventType) {
-        case DEVICE_INITIALIZED:
-            eventString = String::New("DEVICE_INITIALIZED");
-            break;
-        case DEVICE_ERROR:
-            eventString = String::New("DEVICE_ERROR");
-            break;
-        default:
-            eventString = String::New("No known event type found");
-            break;
-    }
-    Local<Value> args[] = { eventString }; 
+void sendEventToNode(int eventType) {
+    Local<String> s = String::New(EnumMapping::mapEventToLabel(eventType).c_str());
+    Local<Value> args[] = { s }; 
     node::MakeCallback(context_obj, "on", 1, args);
 }
 
-/**
- * on tracking event found in frame processing thread
- * we message out to Node in here
+/**re
+ * send event originating from the frame reader thread to Node
  *
  * @param async handle
  * @param status (?)
  */
-void onTrackingEvent(uv_async_t *handle, int status /*UNUSED*/) {
-    int event = *((int*) handle->data);
-    Local <String> eventString;
-    switch (event) {
-        case NEW_USER:
-            eventString = String::New("NEW_USER");
-            lastUserEventDispatched = currentUserState;
-            break;
-        case USER_IS_VISIBLE:
-            eventString = String::New("USER_IS_VISIBLE");
-            lastUserEventDispatched = currentUserState;
-            break; 
-        case USER_IS_OUT_OF_SCENE:
-            eventString = String::New("USER_IS_OUT_OF_SCENE");
-            lastUserEventDispatched = currentUserState;
-            break; 
-        case USER_IS_LOST:
-            eventString = String::New("USER_IS_LOST");
-            lastUserEventDispatched = currentUserState;
-            break; 
-        case SKELETON_STOPPED_TRACKING:
-            eventString = String::New("SKELETON_STOPPED_TRACKING");
-            lastSkeletalEventDispatched = currentSkeletonState;
-            break; 
-        case SKELETON_TRACKING:
-            eventString = String::New("SKELETON_TRACKING");
-            lastSkeletalEventDispatched = currentSkeletonState;
-            break; 
-        case SKELETON_CALIBRATING:
-            eventString = String::New("SKELETON_CALIBRATING");
-            lastSkeletalEventDispatched = currentSkeletonState;
-            break; 
-        case SKELETON_CALIBRATION_FAILED:
-            eventString = String::New("SKELETON_CALIBRATION_FAILED");
-            lastSkeletalEventDispatched = currentSkeletonState;
-            break; 
-        case SWIPE_LEFT:
-            eventString = String::New("GESTURE_SWIPE_LEFT");
-            break;
-        case SWIPE_RIGHT:
-            eventString = String::New("GESTURE_SWIPE_RIGHT");
-            break;
-        case SWIPE_UP:
-            eventString = String::New("GESTURE_SWIPE_UP");
-            break;
-        case SWIPE_DOWN:
-            eventString = String::New("GESTURE_SWIPE_DOWN");
-            break;
-        case WAVE:
-            eventString = String::New("GESTURE_WAVE");
-            break;
-
-        default:
-            fprintf(stderr, "Event type error %d \n", event);
-            eventString = String::New("No known event type found");
-            break; 
-    }
-
-    Local<Value> args[] = { eventString }; 
+void sendEventFromThreadToNode(uv_async_t *handle, int status /*UNUSED*/) {
+    int eventType = *((int*) handle->data);
+    Local<String> s = String::New(EnumMapping::mapEventToLabel(eventType).c_str());
+    Local<Value> args[] = { s }; 
     node::MakeCallback(context_obj, "on", 1, args);
 }
 
@@ -194,7 +132,7 @@ Handle<Value> initialize(const Arguments& args) {
     if (niteRc != nite::STATUS_OK)
     {
         fprintf(stderr, "NiTE initialization failed\n");
-        onDeviceEvent(DEVICE_ERROR);
+        sendEventToNode(ERROR_NITE_INITIALIZATION);
         return scope.Close( Undefined() );
     }
 
@@ -202,18 +140,10 @@ Handle<Value> initialize(const Arguments& args) {
     if (niteRc != nite::STATUS_OK)
     {
         fprintf(stderr, "Couldn't create user tracker\n");
-        onDeviceEvent(DEVICE_ERROR);
+        sendEventToNode(ERROR_USER_TRACKER_CREATION);
         return scope.Close(Undefined());
     }
-    fprintf(stderr,"Start moving around to get detected...\n(PSI pose may be required for skeleton calibration, depending on the configuration)\n");
-
-    niteRc = handTracker.create();
-    if (niteRc != nite::STATUS_OK)
-    {
-        fprintf(stderr, "Couldn't create hand tracker\n");
-        return scope.Close( Undefined() );
-    }
-    handTracker.startGestureDetection(nite::GESTURE_WAVE);
+    fprintf(stderr,"Start moving around to get detected...\n");
 
     keepWorkerRunning = true;
     skeleton.leftHand.isActive = false;
@@ -241,12 +171,12 @@ Handle<Value> initialize(const Arguments& args) {
     skeleton.rightHip.isActive = false;
     skeleton.rightHip.type = nite::JOINT_RIGHT_HIP;
 
-    onDeviceEvent(DEVICE_INITIALIZED);
-    
+    sendEventToNode(DEVICE_INITIALIZED);
+
     loop = uv_default_loop();
 
     uv_work_t req;
-    uv_async_init(loop, &async, onTrackingEvent);
+    uv_async_init(loop, &async, sendEventFromThreadToNode);
     uv_queue_work(loop, &req, frameWorker, onFrameWorkerThreadComplete);
     uv_run(loop);
 
@@ -269,24 +199,13 @@ void onFrameWorkerThreadComplete(uv_work_t *req) {
  * @param request thread 
  */
 void frameWorker(uv_work_t *req) {
-    int userEventType = 0;
-    int gestureType = 0;
     while (keepWorkerRunning) {
         nite::Status niteRc;
         nite::UserTrackerFrameRef userTrackerFrame;
         niteRc = userTracker.readFrame(&userTrackerFrame);
-
         if (niteRc != nite::STATUS_OK)
         {
             fprintf(stderr,"Get next frame failed\n");
-            continue;
-        }
-
-        nite::HandTrackerFrameRef handTrackerFrame;
-        niteRc = handTracker.readFrame(&handTrackerFrame);
-        if (niteRc != nite::STATUS_OK)
-        {
-            fprintf(stderr,"Hand track frame failed\n");
             continue;
         }
 
@@ -295,7 +214,7 @@ void frameWorker(uv_work_t *req) {
         {
             const nite::UserData& user = users[i];
 
-            updateUserState(user,userTrackerFrame.getTimestamp());
+            updateUserState(user);
             if (user.isNew())
             {
                 userTracker.startSkeletonTracking(user.getId());
@@ -314,23 +233,10 @@ void frameWorker(uv_work_t *req) {
             {
                 const nite::Skeleton &niteskeleton = user.getSkeleton();
                 mapSkeleton(skeleton, niteskeleton);
-                gestureType = gst.updateSkeleton(skeleton);
+                gestureIDToSend = gst.updateSkeleton(skeleton);
 
-                if (gestureType != NO_GESTURE) {
-                    async.data = (void*) &gestureType;
-                    uv_async_send(&async);
-                }
-            }
-        }
-
-        const nite::Array<nite::GestureData>& gestures = handTrackerFrame.getGestures();
-        for (int i = 0; i < gestures.getSize(); ++i)
-        {
-            if (gestures[i].isComplete())
-            {
-                if (gestures[i].getType() == nite::GESTURE_WAVE) {
-                    gestureType = WAVE;
-                    async.data = (void*) &gestureType;
+                if (gestureIDToSend != NO_GESTURE) {
+                    async.data = (void*) &gestureIDToSend;
                     uv_async_send(&async);
                 }
             }
@@ -338,7 +244,7 @@ void frameWorker(uv_work_t *req) {
     }
 }
 
-Local<Object> mapJointToJSObject(char *jointName) {
+Local<Object> mapJointToNodeObject(char *jointName) {
     Local<Object> jsJoint = Object::New();
 
     int left_percentExtended = -1;
@@ -441,21 +347,25 @@ void mapJointFromSkeleton(Joint &j, nite::Skeleton s) {
 /**
  * update and event out on state of user and skeleton tracking
  */
-void updateUserState(const nite::UserData& user, unsigned long long ts)
+void updateUserState(const nite::UserData& user)
 {
     if (user.isNew()) {
-        currentUserState = NEW_USER;
-    } else if (user.isVisible() && !g_visibleUsers[user.getId()]) {
-        currentUserState = USER_IS_VISIBLE;
-    } else if (!user.isVisible() && g_visibleUsers[user.getId()]) {
-        currentUserState = USER_IS_OUT_OF_SCENE;
-    } else if (user.isLost()) {
-        currentUserState = USER_IS_LOST;
-    }
-
-    if (currentUserState != 0 && lastUserEventDispatched != currentUserState) {
-        async.data = (void*) &currentUserState;
+        eventIDToSend = NEW_USER;
+        async.data = (void*) &eventIDToSend;
         uv_async_send(&async);
+    } else if (!isUserVisible && user.isVisible() && user.getId() == 1) {
+        isUserVisible = true;
+        eventIDToSend = USER_IS_VISIBLE;
+        async.data = (void*) &eventIDToSend;
+        uv_async_send(&async);
+    } else if (isUserVisible && !user.isVisible() && user.getId() == 1) {
+        isUserVisible = false;
+        eventIDToSend = USER_IS_OUT_OF_SCENE;
+        async.data = (void*) &eventIDToSend;
+        uv_async_send(&async);
+    } else if (user.isLost()) {
+        // why doesn't this fire?
+        // maybe two users are needed?
     }
 
     g_visibleUsers[user.getId()] = user.isVisible();
@@ -464,28 +374,44 @@ void updateUserState(const nite::UserData& user, unsigned long long ts)
     {
         switch(g_skeletonStates[user.getId()] = user.getSkeleton().getState())
         {
-        case nite::SKELETON_NONE:
-            currentSkeletonState = SKELETON_STOPPED_TRACKING;
-            break;
-        case nite::SKELETON_CALIBRATING:
-            currentSkeletonState = SKELETON_CALIBRATING;
-            break;
-        case nite::SKELETON_TRACKED:
-            currentSkeletonState = SKELETON_TRACKING;
-            break;
-        case nite::SKELETON_CALIBRATION_ERROR_NOT_IN_POSE:
-        case nite::SKELETON_CALIBRATION_ERROR_HANDS:
-        case nite::SKELETON_CALIBRATION_ERROR_LEGS:
-        case nite::SKELETON_CALIBRATION_ERROR_HEAD:
-        case nite::SKELETON_CALIBRATION_ERROR_TORSO:
-            currentSkeletonState = SKELETON_CALIBRATION_FAILED;
-            break;
+            case nite::SKELETON_NONE:
+                if (isSkeletonTracking) {
+                    isSkeletonTracking = false;
+                    isSkeletonCalibrating = false;
+                    eventIDToSend = SKELETON_STOPPED_TRACKING;
+                    async.data = (void*) &eventIDToSend;
+                    uv_async_send(&async);
+                }
+                break;
+            case nite::SKELETON_CALIBRATING:
+                if (!isSkeletonCalibrating) {
+                    isSkeletonCalibrating = true;
+                    eventIDToSend = SKELETON_CALIBRATING;
+                    async.data = (void*) &eventIDToSend;
+                    uv_async_send(&async);
+                }
+                break;
+            case nite::SKELETON_TRACKED:
+                if (!isSkeletonTracking) {
+                    isSkeletonTracking = true;
+                    isSkeletonCalibrating = false;
+                    eventIDToSend = SKELETON_TRACKING;
+                    async.data = (void*) &eventIDToSend;
+                    uv_async_send(&async);
+                }
+                break;
+            case nite::SKELETON_CALIBRATION_ERROR_NOT_IN_POSE:
+            case nite::SKELETON_CALIBRATION_ERROR_HANDS:
+            case nite::SKELETON_CALIBRATION_ERROR_LEGS:
+            case nite::SKELETON_CALIBRATION_ERROR_HEAD:
+            case nite::SKELETON_CALIBRATION_ERROR_TORSO:
+                eventIDToSend = SKELETON_CALIBRATION_FAILED;
+                async.data = (void*) &eventIDToSend;
+                uv_async_send(&async);
+                isSkeletonTracking = false;
+                isSkeletonCalibrating = false;
+                break;
         }
-    }
-
-    if (currentSkeletonState!= 0 && lastSkeletalEventDispatched != currentSkeletonState) {
-        async.data = (void*) &currentSkeletonState;
-        uv_async_send(&async);
     }
 }
 

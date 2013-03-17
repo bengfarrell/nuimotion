@@ -19,7 +19,7 @@
     "targets": [
     {
         "target_name": "nuimotion",
-        "sources": [ "Main.cpp" ],
+        "sources": [ "Main.cpp", "enums/EnumMapping.cpp" ],
         "include_dirs": [ "./Include"],
 
         # -Wl,-rpath will warn of failure on Windows, don't worry - it's a Linux thing, let it fail
