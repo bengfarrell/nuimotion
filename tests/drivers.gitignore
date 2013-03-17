@@ -1,0 +1,7 @@
+# OpenNI and NiTE Drivers
+NiTE/
+OpenNI2/
+
+
+# It can be desirable to copy over the OpenNI/NiTE folders here to be able
+# to use these tests.  Of course, we don't want to commit these drivers/libs

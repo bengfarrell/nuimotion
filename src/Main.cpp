@@ -86,7 +86,11 @@ Handle<Value> getJoints(const Arguments& args) {
 void sendEventToNode(int eventType) {
     Local<String> s = String::New(EnumMapping::mapEventToLabel(eventType).c_str());
     Local<Value> args[] = { s }; 
-    node::MakeCallback(context_obj, "on", 1, args);
+
+    Local<Value> callback_v = context_obj->Get(String::New("on"));
+    if (callback_v->IsFunction()) {
+        node::MakeCallback(context_obj, "on", 1, args);
+    }
 }
 
 /**re
@@ -99,7 +103,10 @@ void sendEventFromThreadToNode(uv_async_t *handle, int status /*UNUSED*/) {
     int eventType = *((int*) handle->data);
     Local<String> s = String::New(EnumMapping::mapEventToLabel(eventType).c_str());
     Local<Value> args[] = { s }; 
-    node::MakeCallback(context_obj, "on", 1, args);
+    Local<Value> callback_v = context_obj->Get(String::New("on"));
+    if (callback_v->IsFunction()) {
+        node::MakeCallback(context_obj, "on", 1, args);
+    }
 }
 
 

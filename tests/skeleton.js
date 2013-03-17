@@ -26,7 +26,7 @@ process.on('exit', function() {
 });
 
 function onUpdate() {
-   console.log(nui.getJoints("left_shoulder").left_shoulder.xRotation )
+   console.log(nui.getJoints(Joints.JOINT_LEFT_SHOULDER)[Joints.JOINT_LEFT_SHOULDER].xRotation )
 }
 
 nui.init();
