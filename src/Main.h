@@ -10,7 +10,7 @@
 #include "../enums/GestureTypes.h"
  #include "../enums/ErrorTypes.h"
   #include "../enums/EventTypes.h"
-#include "../gestures/GestureRecognizer.c"
+#include "../gestures/GestureRecognizer.h"
 
 #include "../Common/NiteSampleUtilities.h"
 
@@ -70,3 +70,5 @@ Handle<Value> initialize(const Arguments& args);
 Handle<Value> close(const Arguments& args);
 Handle<Value> setListener(const Arguments& args);
 Handle<Value> getJoints(const Arguments& args);
+Handle<Value> addGestureListener(const Arguments& args);
+Handle<Value> removeGestureListener(const Arguments& args);

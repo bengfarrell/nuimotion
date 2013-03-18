@@ -18,7 +18,7 @@
 #include "../enums/EventTypes.h"
 #include "../enums/EnumMapping.h"
 
-#include "../gestures/GestureRecognizer.c"
+#include "../gestures/GestureRecognizer.h"
 #include "../Common/NiteSampleUtilities.h"
 
 using namespace v8;
@@ -43,6 +43,10 @@ void init(Handle<Object> target) {
         FunctionTemplate::New(close)->GetFunction());
     target->Set(String::NewSymbol("getJoints"),
         FunctionTemplate::New(getJoints)->GetFunction());
+    target->Set(String::NewSymbol("addGestureListener"),
+        FunctionTemplate::New(addGestureListener)->GetFunction());
+    target->Set(String::NewSymbol("removeGestureListener"),
+        FunctionTemplate::New(removeGestureListener)->GetFunction());
 
     context_obj = Persistent<Object>::New(Object::New()); 
     target->Set(String::New("context"), context_obj); 
@@ -50,6 +54,63 @@ void init(Handle<Object> target) {
     gst = GestureRecognizer();
 }
 
+/**
+ * add gesture listener - no listening for gestures until explicitly added
+ *
+ * @params args
+ */
+Handle<Value> addGestureListener(const Arguments& args) {
+    HandleScope scope;
+    // Argument is not a string - call shenanigans on the whole operation
+    if (!args[0]->IsString()) {
+        ThrowException(Exception::TypeError(String::New("Argument needs to be a string")));
+        return scope.Close(Undefined());
+    }
+    if (!args[1]->IsString()) {
+        ThrowException(Exception::TypeError(String::New("Argument needs to be a string")));
+        return scope.Close(Undefined());
+    }
+
+    String::Utf8Value utfStr1(args[0]->ToString());
+    char* s1 = (char*) *utfStr1;
+
+    String::Utf8Value utfStr2(args[1]->ToString());
+    char* s2 = (char*) *utfStr2;
+
+    int category = EnumMapping::mapGestureToLabel(s1);
+    int name = EnumMapping::mapGestureToLabel(s2);
+    gst.addGestureListener(category, name);
+    return scope.Close(Undefined());
+}
+
+/**
+ * remvoe gesture listener - no listening for gestures until explicitly added
+ *
+ * @params args
+ */
+Handle<Value> removeGestureListener(const Arguments& args) {
+    HandleScope scope;
+    // Argument is not a string - call shenanigans on the whole operation
+    if (!args[0]->IsString()) {
+        ThrowException(Exception::TypeError(String::New("Argument needs to be a string")));
+        return scope.Close(Undefined());
+    }
+    if (!args[1]->IsString()) {
+        ThrowException(Exception::TypeError(String::New("Argument needs to be a string")));
+        return scope.Close(Undefined());
+    }
+
+    String::Utf8Value utfStr1(args[0]->ToString());
+    char* s1 = (char*) *utfStr1;
+
+    String::Utf8Value utfStr2(args[1]->ToString());
+    char* s2 = (char*) *utfStr2;
+
+    int category = EnumMapping::mapGestureToLabel(s1);
+    int name = EnumMapping::mapGestureToLabel(s2);
+    gst.removeGestureListener(category, name);
+    return scope.Close(Undefined());
+}
 
 /**
  * NodeJS Call to get joints

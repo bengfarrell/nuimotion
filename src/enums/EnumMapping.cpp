@@ -85,6 +85,22 @@ namespace EnumMapping {
     }
 
     /**
+     * map gesture name to int
+     *
+     * @param gesture name
+     * @event gesture id
+     */
+    int mapGestureToLabel(std::string name) {
+        if (name == "GESTURE_CATEGORY_SWIPE") return GESTURE_CATEGORY_SWIPE;
+        if (name == "GESTURE_SWIPE_LEFT") return SWIPE_LEFT;
+        if (name == "GESTURE_SWIPE_RIGHT") return SWIPE_RIGHT;
+        if (name == "GESTURE_SWIPE_UP") return SWIPE_UP;
+        if (name == "GESTURE_SWIPE_DOWN") return SWIPE_DOWN;
+        if (name == "GESTURE_WAVE") return WAVE;
+        return -1;
+    }
+
+    /**
      * map error ID to NodeJS String
      *
      * @param error ID

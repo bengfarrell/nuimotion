@@ -8,6 +8,8 @@ enum
   SWIPE_RIGHT = 1002,
   SWIPE_UP = 1003,
   SWIPE_DOWN = 1004,
-  WAVE = 1005
+  WAVE = 1005,
+
+  GESTURE_CATEGORY_SWIPE = 2000
 };
 #endif

@@ -19,7 +19,11 @@
     "targets": [
     {
         "target_name": "nuimotion",
-        "sources": [ "Main.cpp", "enums/EnumMapping.cpp" ],
+        "sources": [ 
+            "Main.cpp", 
+            "enums/EnumMapping.cpp",
+            "gestures/GestureRecognizer.cpp",
+            "gestures/Swipe.cpp" ],
         "include_dirs": [ "./Include"],
 
         # -Wl,-rpath will warn of failure on Windows, don't worry - it's a Linux thing, let it fail

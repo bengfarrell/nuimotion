@@ -9,3 +9,5 @@ process.on('exit', function() {
 });
 
 nui.init();
+
+nui.addGestureListener("GESTURE_CATEGORY_SWIPE", "GESTURE_SWIPE_RIGHT");

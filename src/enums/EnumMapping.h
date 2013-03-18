@@ -30,6 +30,14 @@ namespace EnumMapping
 	std::string mapGestureToLabel(int event);
 
 	/**
+	 * map gesture name to int
+	 *
+	 * @param gesture name
+     * @event gesture id
+	 */
+	int mapGestureToLabel(std::string name);
+
+	/**
 	 * map error ID to NodeJS String
 	 *
 	 * @param error ID
