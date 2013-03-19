@@ -23,7 +23,8 @@
             "Main.cpp", 
             "enums/EnumMapping.cpp",
             "gestures/GestureRecognizer.cpp",
-            "gestures/Swipe.cpp" ],
+            "gestures/Swipe.cpp",
+            "gestures/Wave.cpp" ],
         "include_dirs": [ "./Include"],
 
         # -Wl,-rpath will warn of failure on Windows, don't worry - it's a Linux thing, let it fail

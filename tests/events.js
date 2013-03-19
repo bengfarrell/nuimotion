@@ -1,5 +1,4 @@
 var nui = require("nuimotion");
-
 nui.context.on = function(name) {
     console.log("Event: " + name);
 };
@@ -8,6 +7,12 @@ process.on('exit', function() {
     nui.close();
 });
 
-nui.init();
+nui.addGestureListener(Gestures.Swipe.SWIPE, Gestures.Swipe.types.right);
+nui.addGestureListener(Gestures.Swipe.SWIPE, Gestures.Swipe.types.left);
+nui.addGestureListener(Gestures.Wave.WAVE, Gestures.Wave.types.left);
+nui.addGestureListener(Gestures.Wave.WAVE, Gestures.Wave.types.right);
 
-nui.addGestureListener("GESTURE_CATEGORY_SWIPE", "GESTURE_SWIPE_RIGHT");
+// next line is unused if left and right waves are in play
+nui.addGestureListener(Gestures.Wave.WAVE, Gestures.Wave.types.any);
+
+nui.init();

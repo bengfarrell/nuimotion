@@ -50,7 +50,6 @@ void init(Handle<Object> target) {
 
     context_obj = Persistent<Object>::New(Object::New()); 
     target->Set(String::New("context"), context_obj); 
-
     gst = GestureRecognizer();
 }
 
@@ -301,6 +300,7 @@ void frameWorker(uv_work_t *req) {
             {
                 const nite::Skeleton &niteskeleton = user.getSkeleton();
                 mapSkeleton(skeleton, niteskeleton);
+
                 gestureIDToSend = gst.updateSkeleton(skeleton);
 
                 if (gestureIDToSend != NO_GESTURE) {

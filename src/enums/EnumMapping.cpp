@@ -70,15 +70,19 @@ namespace EnumMapping {
     std::string mapGestureToLabel(int event) {
         switch (event) {
             case SWIPE_LEFT:
-                return "GESTURE_SWIPE_LEFT";
+                return "SWIPE_LEFT";
             case SWIPE_RIGHT:
-                return "GESTURE_SWIPE_RIGHT";
+                return "SWIPE_RIGHT";
             case SWIPE_UP:
-                return "GESTURE_SWIPE_UP";
+                return "SWIPE_UP";
             case SWIPE_DOWN:
-                return "GESTURE_SWIPE_DOWN";
+                return "SWIPE_DOWN";
+            case WAVE_LEFT:
+                return "WAVE_LEFT";
+            case WAVE_RIGHT:
+                return "WAVE_RIGHT";
             case WAVE:
-                return "GESTURE_WAVE";
+                return "WAVE";
             default:
                 return "No known event type found";
         }
@@ -91,12 +95,15 @@ namespace EnumMapping {
      * @event gesture id
      */
     int mapGestureToLabel(std::string name) {
-        if (name == "GESTURE_CATEGORY_SWIPE") return GESTURE_CATEGORY_SWIPE;
-        if (name == "GESTURE_SWIPE_LEFT") return SWIPE_LEFT;
-        if (name == "GESTURE_SWIPE_RIGHT") return SWIPE_RIGHT;
-        if (name == "GESTURE_SWIPE_UP") return SWIPE_UP;
-        if (name == "GESTURE_SWIPE_DOWN") return SWIPE_DOWN;
-        if (name == "GESTURE_WAVE") return WAVE;
+        if (name == "SWIPE_GESTURE") return GESTURE_CATEGORY_SWIPE;
+        if (name == "WAVE_GESTURE") return GESTURE_CATEGORY_WAVE;
+        if (name == "SWIPE_LEFT") return SWIPE_LEFT;
+        if (name == "SWIPE_RIGHT") return SWIPE_RIGHT;
+        if (name == "SWIPE_UP") return SWIPE_UP;
+        if (name == "SWIPE_DOWN") return SWIPE_DOWN;
+        if (name == "WAVE_LEFT") return WAVE_LEFT;
+        if (name == "WAVE_RIGHT") return WAVE_RIGHT;
+        if (name == "WAVE") return WAVE;
         return -1;
     }
 
