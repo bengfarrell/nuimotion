@@ -16,5 +16,5 @@ nui.addGestureListener(Gestures.Wave.WAVE, Gestures.Wave.types.right);
 nui.addGestureListener(Gestures.Wave.WAVE, Gestures.Wave.types.any);
 
 // important to init last, because anything after this declaration will not run
-// though - event listners will continue to fire
+// though - event listeners will continue to fire
 nui.init();
