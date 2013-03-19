@@ -29,4 +29,6 @@ function onUpdate() {
    console.log(nui.getJoints(Joints.JOINT_LEFT_SHOULDER)[Joints.JOINT_LEFT_SHOULDER].xRotation )
 }
 
+// important to init last, because anything after this declaration will not run
+// though - event listners will continue to fire
 nui.init();
