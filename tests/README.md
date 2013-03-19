@@ -13,8 +13,11 @@ Working Directory is "myproject/node_modules/nuimotion/tests"
 Then, tests must contain:
 
 events.js (if this is the node file you choose to run)
+
 skeleton.js (if this is the node file you choose to run)
+
 NiTE2 folder
+
 OpenNI2 folder
 
 And the Node file you run will be one of the JS files in "tests".
@@ -27,8 +30,10 @@ Working Directory is "myproject"
 
 The "myproject" must contain:
 
-<your main nodejs file>.js
+yourMainNodejsFile.js
+
 NiTE2 folder
+
 OpenNI2 folder
 
-And the Node file you run will be <your main nodejs file>.js
+And the Node file you run will be yourMainNodejsFile.js
