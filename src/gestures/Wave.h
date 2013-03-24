@@ -40,6 +40,7 @@ class Wave {
                 int _sideToSideCountRightHand;
 
                 float _sideToSideMaximalDuration;
+                float _sideToSideMinimalDuration;
                 int _sideToSideCountMinimal;
 
                 std::vector<bool> gestureListeners;

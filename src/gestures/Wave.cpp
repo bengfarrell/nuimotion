@@ -25,6 +25,7 @@ Wave::Wave() {
     _sideToSideCountRightHand = 0;
 
     _sideToSideMaximalDuration = .2;
+    _sideToSideMinimalDuration = .02;
     _sideToSideCountMinimal = 6;
 }
 
@@ -126,14 +127,22 @@ bool Wave::detectWaveLeftHand(Skeleton &skeleton) {
             _startTimeWaveLeft = clock();
         }
 
-        if ( (skeleton.leftHand.xPos < _XPosWaveLeft) && (_waveLeftState == RIGHT_OF_ORIGIN || _waveLeftState == AT_ORIGIN)) {
-            _waveLeftState = LEFT_OF_ORIGIN;
-            _startTimeWaveLeft = clock();
-            _sideToSideCountLeftHand++;
-        } else if( (skeleton.leftHand.xPos > _XPosWaveLeft) && (_waveLeftState == LEFT_OF_ORIGIN || _waveLeftState == AT_ORIGIN)) {
-            _waveLeftState = RIGHT_OF_ORIGIN;
-            _startTimeWaveLeft = clock();
-            _sideToSideCountLeftHand++;
+        if (skeleton.leftHand.isActive) {
+            // use left-right shoulder distance to determine decent distance of side-to-side motion
+            // to constitute a wave
+            if ( (skeleton.leftHand.xPos < _XPosWaveLeft)
+                && ( abs(skeleton.leftHand.xPos - _XPosWaveLeft) > abs(skeleton.leftShoulder.xPos - skeleton.rightShoulder.xPos)/8)
+                && (_waveLeftState == RIGHT_OF_ORIGIN || _waveLeftState == AT_ORIGIN)) {
+                _waveLeftState = LEFT_OF_ORIGIN;
+                _startTimeWaveLeft = clock();
+                _sideToSideCountLeftHand++;
+            } else if( (skeleton.leftHand.xPos > _XPosWaveLeft) 
+                && ( abs(skeleton.leftHand.xPos - _XPosWaveLeft) > abs(skeleton.leftShoulder.xPos - skeleton.rightShoulder.xPos)/8) 
+                && (_waveLeftState == LEFT_OF_ORIGIN || _waveLeftState == AT_ORIGIN)) {
+                _waveLeftState = RIGHT_OF_ORIGIN;
+                _startTimeWaveLeft = clock();
+                _sideToSideCountLeftHand++;
+            }
         }
 
         float t = (float)(clock() - _startTimeWaveLeft)/CLOCKS_PER_SEC;
@@ -200,14 +209,22 @@ bool Wave::detectWaveRightHand(Skeleton &skeleton) {
             _startTimeWaveRight = clock();
         }
 
-        if ( (skeleton.rightHand.xPos < _XPosWaveRight) && (_waveRightState == RIGHT_OF_ORIGIN || _waveRightState == AT_ORIGIN)) {
-            _waveRightState = LEFT_OF_ORIGIN;
-            _startTimeWaveRight = clock();
-            _sideToSideCountRightHand++;
-        } else if( (skeleton.rightHand.xPos > _XPosWaveRight) && (_waveRightState == LEFT_OF_ORIGIN || _waveRightState == AT_ORIGIN)) {
-            _waveRightState = RIGHT_OF_ORIGIN;
-            _startTimeWaveRight = clock();
-            _sideToSideCountRightHand++;
+        if (skeleton.rightHand.isActive) {
+            // use left-right shoulder distance to determine decent distance of side-to-side motion
+            // to constitute a wave
+            if ( (skeleton.rightHand.xPos < _XPosWaveRight)
+                && ( abs(skeleton.rightHand.xPos - _XPosWaveRight) > abs(skeleton.rightShoulder.xPos - skeleton.rightShoulder.xPos)/8)
+                && (_waveRightState == RIGHT_OF_ORIGIN || _waveRightState == AT_ORIGIN)) {
+                _waveRightState = LEFT_OF_ORIGIN;
+                _startTimeWaveRight = clock();
+                _sideToSideCountRightHand++;
+            } else if( (skeleton.rightHand.xPos > _XPosWaveRight) 
+                && ( abs(skeleton.rightHand.xPos - _XPosWaveRight) > abs(skeleton.leftShoulder.xPos - skeleton.rightShoulder.xPos)/8)
+                && (_waveRightState == LEFT_OF_ORIGIN || _waveRightState == AT_ORIGIN)) {
+                _waveRightState = RIGHT_OF_ORIGIN;
+                _startTimeWaveRight = clock();
+                _sideToSideCountRightHand++;
+            }
         }
 
         float t = (float)(clock() - _startTimeWaveRight)/CLOCKS_PER_SEC;
