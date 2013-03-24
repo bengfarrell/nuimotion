@@ -5,14 +5,14 @@ var frameDelay = 50; /* milliseconds between frame loop iterations */
 
 nui.context.on = function(name) {
     switch (name) {
-        case "SKELETON_TRACKING":
+        case Events.SKELETON_TRACKING:
             if (!frameLoop) {
                 console.log("Skeleton is tracking");
                 frameLoop = setInterval(onUpdate,frameDelay);
             }
             break;
 
-        case "SKELETON_STOPPED_TRACKING":
+        case Events.SKELETON_STOPPED_TRACKING:
             if (frameLoop) {
                 console.log("Skeleton stopped tracking");
                 clearInterval(frameLoop);
@@ -26,7 +26,7 @@ process.on('exit', function() {
 });
 
 function onUpdate() {
-   console.log(nui.getJoints(Joints.JOINT_LEFT_SHOULDER)[Joints.JOINT_LEFT_SHOULDER].xRotation )
+   console.log(nui.getJoints(Joints.LEFT_HAND)[Joints.RIGHT_HAND].xRotation )
 }
 
 // important to init last, because anything after this declaration will not run

@@ -7,13 +7,13 @@ process.on('exit', function() {
     nui.close();
 });
 
-nui.addGestureListener(Gestures.Swipe.SWIPE, Gestures.Swipe.types.right);
-nui.addGestureListener(Gestures.Swipe.SWIPE, Gestures.Swipe.types.left);
-nui.addGestureListener(Gestures.Wave.WAVE, Gestures.Wave.types.left);
-nui.addGestureListener(Gestures.Wave.WAVE, Gestures.Wave.types.right);
+nui.addGestureListener(Events.Gestures.Swipe.SWIPE, Events.Gestures.Swipe.types.right);
+nui.addGestureListener(Events.Gestures.Swipe.SWIPE, Events.Gestures.Swipe.types.left);
+nui.addGestureListener(Events.Gestures.Wave.WAVE, Events.Gestures.Wave.types.left);
+nui.addGestureListener(Events.Gestures.Wave.WAVE, Events.Gestures.Wave.types.right);
 
 // next line is unused if left and right waves are in play
-nui.addGestureListener(Gestures.Wave.WAVE, Gestures.Wave.types.any);
+nui.addGestureListener(Events.Gestures.Wave.WAVE, Events.Gestures.Wave.types.any);
 
 // important to init last, because anything after this declaration will not run
 // though - event listeners will continue to fire
