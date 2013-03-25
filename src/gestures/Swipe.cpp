@@ -4,13 +4,15 @@
 #include "../gestures/Swipe.h"
 #include <time.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 
 static const int LEFT_HAND = 1;
 static const int RIGHT_HAND = 2;
 
 Swipe::Swipe() {
 	_SwipeMinimalDuration = .10;
-	_SwipeMaximalDuration = 1.0;
+	_SwipeMaximalDuration = 0.5;
 	_startTimeSwipeRight = 0;
 	_startTimeSwipeLeft = 0;
 	_startTimeSwipeUpLeftHand = 0;
@@ -96,22 +98,19 @@ bool Swipe::detectUpSwipeGestureLeftHand(Skeleton &skeleton) {
 
     // check if hand is below the waist and hand is below elbow
 	if (skeleton.leftHand.yPos <= skeleton.leftElbow.yPos 
-		&& skeleton.leftHand.yPos <= skeleton.leftHip.yPos)
+		&& skeleton.leftHand.yPos <= skeleton.torso.yPos)
     {
         _isOnBottomLeftHand = true;
         _startVerticalSwipeXPosLeft = skeleton.leftHand.xPos;
     }
 
-    // grab allowable variance in xPos as hip to hip distance divided by 2
-	int variance = abs(skeleton.leftHip.xPos - skeleton.rightHip.xPos)/2;    
-
-	// if variance in x pos is too great, then cancel the swipe
-	if (abs(_startVerticalSwipeXPosLeft - skeleton.leftHand.xPos) > variance) 
-	{
+    // we only count significantly extended hands as performing the action
+    // will reduce accidental gestures
+    if (skeleton.leftHand.percentExtended < 80) {
         _startTimeSwipeUpLeftHand = 0;
         _isOnBottomLeftHand = false;
         return false;
-	}
+    }
 
     if (_isOnBottomLeftHand)
     {
@@ -122,10 +121,16 @@ bool Swipe::detectUpSwipeGestureLeftHand(Skeleton &skeleton) {
         int endTime = clock();
         float t = (float)(endTime - _startTimeSwipeUpLeftHand)/CLOCKS_PER_SEC;
         if (skeleton.leftHand.yPos > skeleton.leftElbow.yPos 
-        	&& skeleton.leftHand.yPos > skeleton.leftShoulder.yPos 
+        	&& skeleton.leftHand.yPos > skeleton.torso.yPos 
         	&& t < _SwipeMaximalDuration && t > _SwipeMinimalDuration)
         {
             swipeDetected = true;
+            _startTimeSwipeUpLeftHand = 0;
+            _isOnBottomLeftHand = false;
+        } else if (skeleton.leftHand.yPos > skeleton.leftElbow.yPos 
+            && skeleton.leftHand.yPos > skeleton.torso.yPos ) {
+            // no swipe detected - time elapsed, but our hand is still up
+            // so make sure to get it back down - reset the steps
             _startTimeSwipeUpLeftHand = 0;
             _isOnBottomLeftHand = false;
         }
@@ -145,7 +150,7 @@ bool Swipe::detectUpSwipeGestureRightHand(Skeleton &skeleton) {
     }
 
     // grab allowable variance in xPos as hip to hip distance divided by 2
-	int variance = abs(skeleton.leftHip.xPos - skeleton.rightHip.xPos)/2;    
+	int variance = abs(skeleton.leftHip.xPos - skeleton.rightHip.xPos)/8;    
 
 	// if variance in x pos is too great, then cancel the swipe
 	if (abs(_startVerticalSwipeXPosRight - skeleton.rightHand.xPos) > variance) 
@@ -170,7 +175,13 @@ bool Swipe::detectUpSwipeGestureRightHand(Skeleton &skeleton) {
             swipeDetected = true;
             _startTimeSwipeUpRightHand = 0;
             _isOnBottomRightHand = false;
-        }
+        } else if (skeleton.rightHand.yPos > skeleton.rightElbow.yPos 
+            && skeleton.rightHand.yPos > skeleton.rightShoulder.yPos ) {
+            // no swipe detected - time elapsed, but our hand is still up
+            // so make sure to get it back down - reset the steps
+            _startTimeSwipeUpRightHand = 0;
+            _isOnBottomRightHand = false;
+        } 
     }
     return swipeDetected;
 }
@@ -180,19 +191,16 @@ bool Swipe::detectDownSwipeGestureLeftHand(Skeleton &skeleton) {
 
     // check if hand is below the waist and hand is below elbow
     if (skeleton.leftHand.yPos >= skeleton.leftElbow.yPos 
-        && skeleton.leftHand.yPos >= skeleton.leftShoulder.yPos)
+        && skeleton.leftHand.yPos >= skeleton.head.yPos)
     {
         _isOnTopLeftHand = true;
         _startVerticalSwipeXPosLeft = skeleton.leftHand.xPos;
     }
 
-    // grab allowable variance in xPos as hip to hip distance divided by 2
-    int variance = abs(skeleton.leftHip.xPos - skeleton.rightHip.xPos)/2;    
-
-    // if variance in x pos is too great, then cancel the swipe
-    if (abs(_startVerticalSwipeXPosLeft - skeleton.leftHand.xPos) > variance) 
-    {
-        _startTimeSwipeUpLeftHand = 0;
+    // we only count significantly extended hands as performing the action
+    // will reduce accidental gestures
+    if (skeleton.leftHand.percentExtended < 80) {
+        _startTimeSwipeDownLeftHand = 0;
         _isOnTopLeftHand = false;
         return false;
     }
@@ -206,10 +214,16 @@ bool Swipe::detectDownSwipeGestureLeftHand(Skeleton &skeleton) {
         int endTime = clock();
         float t = (float)(endTime - _startTimeSwipeDownLeftHand)/CLOCKS_PER_SEC;
         if (skeleton.leftHand.yPos < skeleton.leftElbow.yPos 
-            && skeleton.leftHand.yPos < skeleton.leftHip.yPos 
+            && skeleton.leftHand.yPos < skeleton.torso.yPos 
             && t < _SwipeMaximalDuration && t > _SwipeMinimalDuration)
         {
             swipeDetected = true;
+            _startTimeSwipeDownLeftHand = 0;
+            _isOnTopLeftHand = false;
+        } else if (skeleton.leftHand.yPos < skeleton.leftElbow.yPos 
+            && skeleton.leftHand.yPos < skeleton.torso.yPos ) {
+            // no swipe detected - time elapsed, but our hand is still down
+            // so make sure to get it back up - reset the steps
             _startTimeSwipeDownLeftHand = 0;
             _isOnTopLeftHand = false;
         }
@@ -229,7 +243,7 @@ bool Swipe::detectDownSwipeGestureRightHand(Skeleton &skeleton) {
     }
 
     // grab allowable variance in xPos as hip to hip distance divided by 2
-    int variance = abs(skeleton.leftHip.xPos - skeleton.rightHip.xPos)/2;    
+    int variance = abs(skeleton.leftHip.xPos - skeleton.rightHip.xPos)/8;    
 
     // if variance in x pos is too great, then cancel the swipe
     if (abs(_startVerticalSwipeXPosRight - skeleton.rightHand.xPos) > variance) 
@@ -252,6 +266,12 @@ bool Swipe::detectDownSwipeGestureRightHand(Skeleton &skeleton) {
             && t < _SwipeMaximalDuration && t > _SwipeMinimalDuration)
         {
             swipeDetected = true;
+            _startTimeSwipeDownRightHand = 0;
+            _isOnTopRightHand = false;
+        } else if (skeleton.rightHand.yPos < skeleton.rightElbow.yPos 
+            && skeleton.rightHand.yPos < skeleton.rightHip.yPos ) {
+            // no swipe detected - time elapsed, but our hand is still down
+            // so make sure to get it back up - reset the steps
             _startTimeSwipeDownRightHand = 0;
             _isOnTopRightHand = false;
         }

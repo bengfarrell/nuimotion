@@ -11,6 +11,8 @@ struct Joint {
     float zRotation;
     int type;
     bool isActive;
+    float positionConfidence;
+    int percentExtended;
 };
 
 #endif

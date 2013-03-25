@@ -325,10 +325,6 @@ Local<Object> mapJointToNodeObject(char *jointName) {
         j = skeleton.head; 
     } else if (strcmp( jointName, "left_hand") == 0) {
         j = skeleton.leftHand; 
-        float dist_lh2le = sqrt( pow(skeleton.leftHand.xPos - skeleton.leftElbow.xPos, 2) + pow(skeleton.leftHand.yPos- skeleton.leftElbow.yPos, 2) + pow(skeleton.leftHand.zPos - skeleton.leftElbow.zPos, 2) );
-        float dist_lh2ls = sqrt( pow(skeleton.leftHand.xPos - skeleton.leftShoulder.xPos, 2) + pow(skeleton.leftHand.yPos - skeleton.leftShoulder.yPos, 2) + pow(skeleton.leftHand.zPos - skeleton.leftShoulder.zPos, 2) );
-        float dist_le2ls = sqrt( pow(skeleton.leftElbow.xPos - skeleton.leftShoulder.xPos, 2) + pow(skeleton.leftElbow.yPos - skeleton.leftShoulder.yPos, 2) + pow(skeleton.leftElbow.zPos - skeleton.leftShoulder.zPos, 2) );
-        left_percentExtended = (int) dist_lh2ls/(dist_le2ls + dist_lh2le) *100;
     } else if (strcmp( jointName, "left_elbow") == 0) {
         j = skeleton.leftElbow; 
     } else if (strcmp( jointName, "left_shoulder") == 0) {
@@ -336,10 +332,6 @@ Local<Object> mapJointToNodeObject(char *jointName) {
     } else if (strcmp( jointName, "left_hip") == 0) {
         j = skeleton.leftHip; 
     } else if (strcmp( jointName, "right_hand") == 0) {
-        float dist_rh2re = sqrt( pow(skeleton.rightHand.xPos - skeleton.rightElbow.xPos, 2) + pow(skeleton.rightHand.yPos- skeleton.rightElbow.yPos, 2) + pow(skeleton.rightHand.zPos - skeleton.rightElbow.zPos, 2) );
-        float dist_rh2rs = sqrt( pow(skeleton.rightHand.xPos - skeleton.rightShoulder.xPos, 2) + pow(skeleton.rightHand.yPos - skeleton.rightShoulder.yPos, 2) + pow(skeleton.rightHand.zPos - skeleton.rightShoulder.zPos, 2) );
-        float dist_re2rs = sqrt( pow(skeleton.rightElbow.xPos - skeleton.rightShoulder.xPos, 2) + pow(skeleton.rightElbow.yPos - skeleton.rightShoulder.yPos, 2) + pow(skeleton.rightElbow.zPos - skeleton.rightShoulder.zPos, 2) );
-        right_percentExtended = (int) dist_rh2rs/(dist_re2rs + dist_rh2re) *100;
         j = skeleton.rightHand; 
     } else if (strcmp( jointName, "right_elbow") == 0) {
         j = skeleton.rightElbow; 
@@ -357,6 +349,7 @@ Local<Object> mapJointToNodeObject(char *jointName) {
     jsJoint->Set(String::NewSymbol("xRotation"), Number::New( j.xRotation ));
     jsJoint->Set(String::NewSymbol("yRotation"), Number::New( j.yRotation ));
     jsJoint->Set(String::NewSymbol("zRotation"), Number::New( j.zRotation ));
+    jsJoint->Set(String::NewSymbol("positionConfidence"), Number::New( j.positionConfidence ));
 
     if (j.type == nite::JOINT_LEFT_HAND) {
        jsJoint->Set(String::NewSymbol("percentExtended"), Number::New(left_percentExtended)); 
@@ -409,6 +402,24 @@ void mapJointFromSkeleton(Joint &j, nite::Skeleton s) {
         j.isActive = true;
     } else {
         j.isActive = false;
+    }
+    j.positionConfidence = s.getJoint( (nite::JointType) j.type).getPositionConfidence();
+
+    // calculate how far arm is extended for hands
+    if ((nite::JointType) j.type == nite::JOINT_LEFT_HAND ) {
+        float dist_lh2le = sqrt( pow(skeleton.leftHand.xPos - skeleton.leftElbow.xPos, 2) + pow(skeleton.leftHand.yPos- skeleton.leftElbow.yPos, 2) + pow(skeleton.leftHand.zPos - skeleton.leftElbow.zPos, 2) );
+        float dist_lh2ls = sqrt( pow(skeleton.leftHand.xPos - skeleton.leftShoulder.xPos, 2) + pow(skeleton.leftHand.yPos - skeleton.leftShoulder.yPos, 2) + pow(skeleton.leftHand.zPos - skeleton.leftShoulder.zPos, 2) );
+        float dist_le2ls = sqrt( pow(skeleton.leftElbow.xPos - skeleton.leftShoulder.xPos, 2) + pow(skeleton.leftElbow.yPos - skeleton.leftShoulder.yPos, 2) + pow(skeleton.leftElbow.zPos - skeleton.leftShoulder.zPos, 2) );
+        float left_percentExtended = (int) dist_lh2ls/(dist_le2ls + dist_lh2le) *100;
+        j.percentExtended = left_percentExtended;
+    }
+
+    if ((nite::JointType) j.type == nite::JOINT_RIGHT_HAND ) {
+        float dist_rh2re = sqrt( pow(skeleton.rightHand.xPos - skeleton.rightElbow.xPos, 2) + pow(skeleton.rightHand.yPos- skeleton.rightElbow.yPos, 2) + pow(skeleton.rightHand.zPos - skeleton.rightElbow.zPos, 2) );
+        float dist_rh2rs = sqrt( pow(skeleton.rightHand.xPos - skeleton.rightShoulder.xPos, 2) + pow(skeleton.rightHand.yPos - skeleton.rightShoulder.yPos, 2) + pow(skeleton.rightHand.zPos - skeleton.rightShoulder.zPos, 2) );
+        float dist_re2rs = sqrt( pow(skeleton.rightElbow.xPos - skeleton.rightShoulder.xPos, 2) + pow(skeleton.rightElbow.yPos - skeleton.rightShoulder.yPos, 2) + pow(skeleton.rightElbow.zPos - skeleton.rightShoulder.zPos, 2) );
+        float right_percentExtended = (int) dist_rh2rs/(dist_re2rs + dist_rh2re) *100;
+        j.percentExtended = right_percentExtended;
     }
 }
 
