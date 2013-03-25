@@ -149,16 +149,14 @@ bool Swipe::detectUpSwipeGestureRightHand(Skeleton &skeleton) {
         _startVerticalSwipeXPosRight = skeleton.rightHand.xPos;
     }
 
-    // grab allowable variance in xPos as hip to hip distance divided by 2
-	int variance = abs(skeleton.leftHip.xPos - skeleton.rightHip.xPos)/8;    
-
-	// if variance in x pos is too great, then cancel the swipe
-	if (abs(_startVerticalSwipeXPosRight - skeleton.rightHand.xPos) > variance) 
-	{
+    // we only count significantly extended hands as performing the action
+    // will reduce accidental gestures
+    if (skeleton.rightHand.percentExtended < 80) {
         _startTimeSwipeUpRightHand = 0;
         _isOnBottomRightHand = false;
         return false;
-	}
+    }
+
 
     if (_isOnBottomRightHand)
     {
@@ -242,13 +240,10 @@ bool Swipe::detectDownSwipeGestureRightHand(Skeleton &skeleton) {
         _startVerticalSwipeXPosRight = skeleton.rightHand.xPos;
     }
 
-    // grab allowable variance in xPos as hip to hip distance divided by 2
-    int variance = abs(skeleton.leftHip.xPos - skeleton.rightHip.xPos)/8;    
-
-    // if variance in x pos is too great, then cancel the swipe
-    if (abs(_startVerticalSwipeXPosRight - skeleton.rightHand.xPos) > variance) 
-    {
-        _startTimeSwipeUpRightHand = 0;
+    // we only count significantly extended hands as performing the action
+    // will reduce accidental gestures
+    if (skeleton.rightHand.percentExtended < 80) {
+        _startTimeSwipeDownRightHand = 0;
         _isOnTopRightHand = false;
         return false;
     }
