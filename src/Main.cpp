@@ -47,7 +47,6 @@ void init(Handle<Object> target) {
         FunctionTemplate::New(addGestureListener)->GetFunction());
     target->Set(String::NewSymbol("removeGestureListener"),
         FunctionTemplate::New(removeGestureListener)->GetFunction());
-
     context_obj = Persistent<Object>::New(Object::New()); 
     target->Set(String::New("context"), context_obj); 
     gst = GestureRecognizer();
@@ -351,10 +350,8 @@ Local<Object> mapJointToNodeObject(char *jointName) {
     jsJoint->Set(String::NewSymbol("zRotation"), Number::New( j.zRotation ));
     jsJoint->Set(String::NewSymbol("positionConfidence"), Number::New( j.positionConfidence ));
 
-    if (j.type == nite::JOINT_LEFT_HAND) {
-       jsJoint->Set(String::NewSymbol("percentExtended"), Number::New(left_percentExtended)); 
-    } else if (j.type == nite::JOINT_RIGHT_HAND) {
-       jsJoint->Set(String::NewSymbol("percentExtended"), Number::New(right_percentExtended));  
+    if (j.type == nite::JOINT_LEFT_HAND || j.type == nite::JOINT_RIGHT_HAND) {
+       jsJoint->Set(String::NewSymbol("percentExtended"), Number::New(j.percentExtended)); 
     }
 
     jsJoint->Set(String::NewSymbol("active"), Number::New( j.isActive ));
@@ -410,7 +407,7 @@ void mapJointFromSkeleton(Joint &j, nite::Skeleton s) {
         float dist_lh2le = sqrt( pow(skeleton.leftHand.xPos - skeleton.leftElbow.xPos, 2) + pow(skeleton.leftHand.yPos- skeleton.leftElbow.yPos, 2) + pow(skeleton.leftHand.zPos - skeleton.leftElbow.zPos, 2) );
         float dist_lh2ls = sqrt( pow(skeleton.leftHand.xPos - skeleton.leftShoulder.xPos, 2) + pow(skeleton.leftHand.yPos - skeleton.leftShoulder.yPos, 2) + pow(skeleton.leftHand.zPos - skeleton.leftShoulder.zPos, 2) );
         float dist_le2ls = sqrt( pow(skeleton.leftElbow.xPos - skeleton.leftShoulder.xPos, 2) + pow(skeleton.leftElbow.yPos - skeleton.leftShoulder.yPos, 2) + pow(skeleton.leftElbow.zPos - skeleton.leftShoulder.zPos, 2) );
-        float left_percentExtended = (int) dist_lh2ls/(dist_le2ls + dist_lh2le) *100;
+        float left_percentExtended = (int)( dist_lh2ls/(dist_le2ls + dist_lh2le) *100);
         j.percentExtended = left_percentExtended;
     }
 

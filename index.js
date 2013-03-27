@@ -19,10 +19,19 @@ Joints.HEAD = "head";
 Events = {};
 Events.Gestures = {};
 Events.Gestures.Swipe = {};
+
+/** gesture category */
 Events.Gestures.Swipe.SWIPE = "SWIPE_GESTURE";
+
+/** gesture types */
 Events.Gestures.Swipe.types = {left: "SWIPE_LEFT", right: "SWIPE_RIGHT", up: "SWIPE_UP", down: "SWIPE_DOWN"};
+
 Events.Gestures.Wave = {};
+
+/** gesture category */
 Events.Gestures.Wave.WAVE = "WAVE_GESTURE";
+
+/** gesture types */
 Events.Gestures.Wave.types = {left: "WAVE_LEFT", right: "WAVE_RIGHT", any: "WAVE"};
 Events.DEVICE_INITIALIZED = "DEVICE_INITIALIZED";
 Events.DEVICE_ERROR = "DEVICE_ERROR";
