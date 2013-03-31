@@ -239,12 +239,10 @@ Handle<Value> initialize(const Arguments& args) {
 
     sendEventToNode(DEVICE_INITIALIZED);
 
-    loop = uv_default_loop();
-
-    uv_work_t req;
-    uv_async_init(loop, &async, sendEventFromThreadToNode);
-    uv_queue_work(loop, &req, frameWorker, onFrameWorkerThreadComplete);
-    uv_run(loop);
+    uv_work_t *req = new uv_work_t;
+    uv_async_init(uv_default_loop(), &async, sendEventFromThreadToNode);
+    uv_queue_work(uv_default_loop(), req, frameWorker, onFrameWorkerThreadComplete);
+    uv_ref((uv_handle_t *)&async);
 
     return scope.Close(Undefined());
 }
@@ -265,6 +263,7 @@ void onFrameWorkerThreadComplete(uv_work_t *req) {
  * @param request thread 
  */
 void frameWorker(uv_work_t *req) {
+        fprintf(stderr,"Hi 2\n");
     while (keepWorkerRunning) {
         nite::Status niteRc;
         nite::UserTrackerFrameRef userTrackerFrame;
