@@ -1,34 +1,28 @@
-var nui = require("nuimotion");
+// Skeleton Update Test
+//
+// Activity will query both hands (left and right)
 
-var frameLoop;
-var frameDelay = 50; /* milliseconds between frame loop iterations */
+var nuimotion = require("nuimotion");
 
-nui.context.on = function(name) {
-    switch (name) {
-        case Events.SKELETON_TRACKING:
-            if (!frameLoop) {
-                console.log("Skeleton is tracking");
-                frameLoop = setInterval(onUpdate,frameDelay);
-            }
-            break;
+// start the skeleton listener, add the joints a callback and (optionally) a frame rate in milliseconds for checking
+nuimotion.startSkeletonListener( [
+    nuimotion.Joints.LEFT_HAND,
+    nuimotion.Joints.RIGHT_HAND ],
+    onSkeletonUpdate /* , 50 (the default) */ );
 
-        case Events.SKELETON_STOPPED_TRACKING:
-            if (frameLoop) {
-                console.log("Skeleton stopped tracking");
-                clearInterval(frameLoop);
-                frameLoop = null;
-            }
-    }
-};
+nuimotion.init();
 
+/**
+ * listen for Node process shutdown and close NUIMotion appropriately
+ */
 process.on('exit', function() {
-    nui.close();
+    nuimotion.close();
 });
 
-function onUpdate() {
-   console.log(nui.getJoints(Joints.LEFT_HAND)[Joints.RIGHT_HAND].xRotation )
+/**
+ * skeleton update callback
+ * @param skeleton
+ */
+function onSkeletonUpdate(skeleton) {
+    console.log(skeleton);
 }
-
-// important to init last, because anything after this declaration will not run
-// though - event listeners will continue to fire
-nui.init();

@@ -82,7 +82,7 @@ namespace EnumMapping {
             case WAVE_RIGHT:
                 return "WAVE_RIGHT";
             case WAVE:
-                return "WAVE";
+                return "WAVE_ANY";
             default:
                 return "No known event type found";
         }
@@ -103,7 +103,7 @@ namespace EnumMapping {
         if (name == "SWIPE_DOWN") return SWIPE_DOWN;
         if (name == "WAVE_LEFT") return WAVE_LEFT;
         if (name == "WAVE_RIGHT") return WAVE_RIGHT;
-        if (name == "WAVE") return WAVE;
+        if (name == "WAVE_ANY") return WAVE;
         return -1;
     }
 

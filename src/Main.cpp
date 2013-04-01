@@ -263,7 +263,6 @@ void onFrameWorkerThreadComplete(uv_work_t *req) {
  * @param request thread 
  */
 void frameWorker(uv_work_t *req) {
-        fprintf(stderr,"Hi 2\n");
     while (keepWorkerRunning) {
         nite::Status niteRc;
         nite::UserTrackerFrameRef userTrackerFrame;

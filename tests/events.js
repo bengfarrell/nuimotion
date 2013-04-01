@@ -1,20 +1,44 @@
-var nui = require("nuimotion");
-nui.context.on = function(name) {
-    console.log("Event: " + name);
-};
+// Events/Gestures test
+//
+// Activity will listen for skeleton start/stop tracking
+// Also listen for left/right swipes and waves
 
+var nuimotion = require("nuimotion");
+
+nuimotion.addListener(
+    [ nuimotion.Events.SKELETON_TRACKING,
+        nuimotion.Events.SKELETON_STOPPED_TRACKING ],
+    onEvent );
+
+nuimotion.addGesture(
+    [ nuimotion.Events.Gestures.Swipe.types.left,
+        nuimotion.Events.Gestures.Swipe.types.right,
+        nuimotion.Events.Gestures.Wave.types.left,
+        nuimotion.Events.Gestures.Wave.types.right,
+        nuimotion.Events.Gestures.Wave.types.any /* will not fire if left and right waves are present */ ],
+    onGesture);
+
+nuimotion.init();
+
+/**
+ * listen for Node process shutdown and close NUIMotion appropriately
+ */
 process.on('exit', function() {
-    nui.close();
+    nuimotion.close();
 });
 
-nui.addGestureListener(Events.Gestures.Swipe.SWIPE, Events.Gestures.Swipe.types.right);
-nui.addGestureListener(Events.Gestures.Swipe.SWIPE, Events.Gestures.Swipe.types.left);
-nui.addGestureListener(Events.Gestures.Wave.WAVE, Events.Gestures.Wave.types.left);
-nui.addGestureListener(Events.Gestures.Wave.WAVE, Events.Gestures.Wave.types.right);
+/**
+ * on general event (user/device/etc)
+ * @param eventType
+ */
+function onEvent(eventType) {
+    console.log(eventType);
+}
 
-// next line is unused if left and right waves are in play
-nui.addGestureListener(Events.Gestures.Wave.WAVE, Events.Gestures.Wave.types.any);
-
-// important to init last, because anything after this declaration will not run
-// though - event listeners will continue to fire
-nui.init();
+/**
+ * on gesture event
+ * @param gesture
+ */
+function onGesture(gesture) {
+    console.log(gesture)
+}
