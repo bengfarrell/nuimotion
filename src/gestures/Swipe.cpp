@@ -18,16 +18,27 @@ Swipe::Swipe() {
 	_startTimeSwipeUpLeftHand = 0;
 	_startTimeSwipeUpRightHand = 0;
 
-	_startVerticalSwipeXPosLeft = 0;
-	_startVerticalSwipeXPosRight = 0;
-	 _isOnRight = false;	
-	 _isOnLeft = false;
-	 _isOnBottomLeftHand = false;
-	 _isOnBottomRightHand = false;
-     gestureListeners.push_back(false);
-     gestureListeners.push_back(false);
-     gestureListeners.push_back(false);
-     gestureListeners.push_back(false);
+	_isOnRight = false;	
+	_isOnLeft = false;
+	_isOnBottomLeftHand = false;
+	_isOnBottomRightHand = false;
+
+    _swipeLeftHasStarted = false;
+    _swipeRightHasStarted = false;
+    _swipeUpHasStarted = false;
+    _swipeDownHasStarted = false;
+
+    gestureListeners.push_back(false);
+    gestureListeners.push_back(false);
+    gestureListeners.push_back(false);
+    gestureListeners.push_back(false);
+
+    gestureSteps.push_back(0);
+    gestureSteps.push_back(0);
+    gestureSteps.push_back(0);
+    gestureSteps.push_back(0);
+    gestureSteps.push_back(0);
+    gestureSteps.push_back(0);
 }
 
 void Swipe::addGestureListener(int gestureName) {
@@ -72,44 +83,44 @@ bool Swipe::isActive() {
     }
 }
 
-int Swipe::updateSkeleton(Skeleton &sk) {
+void Swipe::updateSkeleton(std::vector<Gesture> &gestures, Skeleton &sk) {
     if (gestureListeners[0]) {
-        if (detectLeftSwipeGesture(sk)) { return SWIPE_LEFT; }
+        detectLeftSwipeGesture(gestures, sk);
     }
 
     if (gestureListeners[1]) {
-        if (detectRightSwipeGesture(sk)) { return SWIPE_RIGHT; }
+        detectRightSwipeGesture(gestures, sk);
     }
 	
     if (gestureListeners[2]) {
-        if (detectUpSwipeGestureLeftHand(sk)) { return SWIPE_UP; }
-        if (detectUpSwipeGestureRightHand(sk)) { return SWIPE_UP; }
+        detectUpSwipeGestureLeftHand(gestures, sk);
+        detectUpSwipeGestureRightHand(gestures, sk);
     }
 
     if (gestureListeners[3]) {
-        if (detectDownSwipeGestureLeftHand(sk)) { return SWIPE_DOWN; }
-        if (detectDownSwipeGestureRightHand(sk)) { return SWIPE_DOWN; }
+        detectDownSwipeGestureLeftHand(gestures, sk);
+        detectDownSwipeGestureRightHand(gestures, sk);
     }
-    return NO_GESTURE;
 }
 
-bool Swipe::detectUpSwipeGestureLeftHand(Skeleton &skeleton) {
-	bool swipeDetected = false;
-
-    // check if hand is below the waist and hand is below elbow
-	if (skeleton.leftHand.yPos <= skeleton.leftElbow.yPos 
-		&& skeleton.leftHand.yPos <= skeleton.torso.yPos)
+void Swipe::detectUpSwipeGestureLeftHand(std::vector<Gesture> &gestures, Skeleton &skeleton) {
+    // check if hand is above the waist, extended, and below the elbow
+    // keep resetting time while remaining in position so user can swipe at their leisure
+    if (skeleton.leftHand.yPos <= skeleton.leftElbow.yPos
+        && skeleton.leftHand.percentExtended > 90
+        && skeleton.leftShoulder.yRotation < 45 )
     {
         _isOnBottomLeftHand = true;
-        _startVerticalSwipeXPosLeft = skeleton.leftHand.xPos;
+        _startTimeSwipeUpLeftHand = 0;
+        queueGestureEvent(gestures, skeleton, SWIPE_UP, HAND_LEFT, GESTURE_STEP_START);
     }
 
-    // we only count significantly extended hands as performing the action
-    // will reduce accidental gestures
-    if (skeleton.leftHand.percentExtended < 80) {
-        _startTimeSwipeUpLeftHand = 0;
+    // if hand is put back down, cancel the gesture
+    // this is important to catch since this is the arms natural pose/resting position
+    if (skeleton.leftShoulder.yRotation > 45 && _isOnBottomLeftHand )
+    {
         _isOnBottomLeftHand = false;
-        return false;
+        queueGestureEvent(gestures, skeleton, SWIPE_UP, HAND_LEFT, GESTURE_STEP_CANCELLED);
     }
 
     if (_isOnBottomLeftHand)
@@ -121,86 +132,79 @@ bool Swipe::detectUpSwipeGestureLeftHand(Skeleton &skeleton) {
         int endTime = clock();
         float t = (float)(endTime - _startTimeSwipeUpLeftHand)/CLOCKS_PER_SEC;
         if (skeleton.leftHand.yPos > skeleton.leftElbow.yPos 
-        	&& skeleton.leftHand.yPos > skeleton.torso.yPos 
+        	&& skeleton.leftHand.yPos > skeleton.leftShoulder.yPos
         	&& t < _SwipeMaximalDuration && t > _SwipeMinimalDuration)
         {
-            swipeDetected = true;
+            queueGestureEvent(gestures, skeleton, SWIPE_UP, HAND_LEFT, GESTURE_STEP_COMPLETE);
             _startTimeSwipeUpLeftHand = 0;
             _isOnBottomLeftHand = false;
-        } else if (skeleton.leftHand.yPos > skeleton.leftElbow.yPos 
-            && skeleton.leftHand.yPos > skeleton.torso.yPos ) {
-            // no swipe detected - time elapsed, but our hand is still up
-            // so make sure to get it back down - reset the steps
+        } else if ( t > _SwipeMaximalDuration ) {
             _startTimeSwipeUpLeftHand = 0;
             _isOnBottomLeftHand = false;
+            queueGestureEvent(gestures, skeleton, SWIPE_UP, HAND_LEFT, GESTURE_STEP_CANCELLED);
         }
     }
-    return swipeDetected;
 }
 
-bool Swipe::detectUpSwipeGestureRightHand(Skeleton &skeleton) {
-	bool swipeDetected = false;
-
-    // check if hand is below the waist and hand is below elbow
-	if (skeleton.rightHand.yPos <= skeleton.rightElbow.yPos 
-		&& skeleton.rightHand.yPos <= skeleton.rightHip.yPos)
+void Swipe::detectUpSwipeGestureRightHand(std::vector<Gesture> &gestures, Skeleton &skeleton) {
+    // check if hand is above the waist, extended, and below the elbow
+    // keep resetting time while remaining in position so user can swipe at their leisure
+    if (skeleton.rightHand.yPos <= skeleton.rightElbow.yPos
+        && skeleton.rightHand.percentExtended > 90
+        && skeleton.rightShoulder.yRotation > -45 )
     {
         _isOnBottomRightHand = true;
-        _startVerticalSwipeXPosRight = skeleton.rightHand.xPos;
-    }
-
-    // we only count significantly extended hands as performing the action
-    // will reduce accidental gestures
-    if (skeleton.rightHand.percentExtended < 80) {
         _startTimeSwipeUpRightHand = 0;
-        _isOnBottomRightHand = false;
-        return false;
+        queueGestureEvent(gestures, skeleton, SWIPE_UP, HAND_RIGHT, GESTURE_STEP_START);
     }
 
-
+    // if hand is put back down, cancel the gesture
+    // this is important to catch since this is the arms natural pose/resting position
+    if (skeleton.rightShoulder.yRotation < -45 && _isOnBottomRightHand )
+    {
+        _isOnBottomRightHand = false;
+        queueGestureEvent(gestures, skeleton, SWIPE_UP, HAND_RIGHT, GESTURE_STEP_CANCELLED);
+    }
+    
     if (_isOnBottomRightHand)
     {
         if (_startTimeSwipeUpRightHand == 0) {
             _startTimeSwipeUpRightHand = clock();
         }
-        
+
         int endTime = clock();
         float t = (float)(endTime - _startTimeSwipeUpRightHand)/CLOCKS_PER_SEC;
         if (skeleton.rightHand.yPos > skeleton.rightElbow.yPos 
-        	&& skeleton.rightHand.yPos > skeleton.rightShoulder.yPos 
-        	&& t < _SwipeMaximalDuration && t > _SwipeMinimalDuration)
+            && skeleton.rightHand.yPos > skeleton.rightShoulder.yPos
+            && t < _SwipeMaximalDuration && t > _SwipeMinimalDuration)
         {
-            swipeDetected = true;
+            queueGestureEvent(gestures, skeleton, SWIPE_UP, HAND_RIGHT, GESTURE_STEP_COMPLETE);
             _startTimeSwipeUpRightHand = 0;
             _isOnBottomRightHand = false;
-        } else if (skeleton.rightHand.yPos > skeleton.rightElbow.yPos 
-            && skeleton.rightHand.yPos > skeleton.rightShoulder.yPos ) {
-            // no swipe detected - time elapsed, but our hand is still up
-            // so make sure to get it back down - reset the steps
+        } else if ( t > _SwipeMaximalDuration ) {
             _startTimeSwipeUpRightHand = 0;
             _isOnBottomRightHand = false;
-        } 
+            queueGestureEvent(gestures, skeleton, SWIPE_UP, HAND_RIGHT, GESTURE_STEP_CANCELLED);
+        }
     }
-    return swipeDetected;
 }
 
-bool Swipe::detectDownSwipeGestureLeftHand(Skeleton &skeleton) {
-    bool swipeDetected = false;
-
-    // check if hand is below the waist and hand is below elbow
-    if (skeleton.leftHand.yPos >= skeleton.leftElbow.yPos 
-        && skeleton.leftHand.yPos >= skeleton.head.yPos)
+void Swipe::detectDownSwipeGestureLeftHand(std::vector<Gesture> &gestures, Skeleton &skeleton) {
+    // check if hand is above the waist, extended, and below the elbow
+    // keep resetting time while remaining in position so user can swipe at their leisure
+    if (skeleton.leftHand.yPos >= skeleton.leftShoulder.yPos
+        && skeleton.leftHand.percentExtended > 90 )
     {
         _isOnTopLeftHand = true;
-        _startVerticalSwipeXPosLeft = skeleton.leftHand.xPos;
+        _startTimeSwipeDownLeftHand = 0;
+        queueGestureEvent(gestures, skeleton, SWIPE_DOWN, HAND_LEFT, GESTURE_STEP_START);
     }
 
-    // we only count significantly extended hands as performing the action
-    // will reduce accidental gestures
-    if (skeleton.leftHand.percentExtended < 80) {
-        _startTimeSwipeDownLeftHand = 0;
+    if (skeleton.leftHand.yPos >= skeleton.leftShoulder.yPos
+        && skeleton.leftHand.percentExtended < 80 )
+    {
         _isOnTopLeftHand = false;
-        return false;
+        queueGestureEvent(gestures, skeleton, SWIPE_DOWN, HAND_LEFT, GESTURE_STEP_CANCELLED);
     }
 
     if (_isOnTopLeftHand)
@@ -212,40 +216,36 @@ bool Swipe::detectDownSwipeGestureLeftHand(Skeleton &skeleton) {
         int endTime = clock();
         float t = (float)(endTime - _startTimeSwipeDownLeftHand)/CLOCKS_PER_SEC;
         if (skeleton.leftHand.yPos < skeleton.leftElbow.yPos 
-            && skeleton.leftHand.yPos < skeleton.torso.yPos 
+            && skeleton.leftHand.yPos < skeleton.leftHip.yPos
             && t < _SwipeMaximalDuration && t > _SwipeMinimalDuration)
         {
-            swipeDetected = true;
+            queueGestureEvent(gestures, skeleton, SWIPE_DOWN, HAND_LEFT, GESTURE_STEP_COMPLETE);
             _startTimeSwipeDownLeftHand = 0;
             _isOnTopLeftHand = false;
-        } else if (skeleton.leftHand.yPos < skeleton.leftElbow.yPos 
-            && skeleton.leftHand.yPos < skeleton.torso.yPos ) {
-            // no swipe detected - time elapsed, but our hand is still down
-            // so make sure to get it back up - reset the steps
+        } else if ( t > _SwipeMaximalDuration ) {
             _startTimeSwipeDownLeftHand = 0;
             _isOnTopLeftHand = false;
+            queueGestureEvent(gestures, skeleton, SWIPE_DOWN, HAND_LEFT, GESTURE_STEP_CANCELLED);
         }
     }
-    return swipeDetected;
 }
 
-bool Swipe::detectDownSwipeGestureRightHand(Skeleton &skeleton) {
-    bool swipeDetected = false;
-
-    // check if hand is below the waist and hand is below elbow
-    if (skeleton.rightHand.yPos >= skeleton.rightElbow.yPos 
-        && skeleton.rightHand.yPos >= skeleton.rightShoulder.yPos)
+void Swipe::detectDownSwipeGestureRightHand(std::vector<Gesture> &gestures, Skeleton &skeleton) {
+    // check if hand is above the waist, extended, and below the elbow
+    // keep resetting time while remaining in position so user can swipe at their leisure
+    if (skeleton.rightHand.yPos >= skeleton.rightShoulder.yPos
+        && skeleton.rightHand.percentExtended > 90 )
     {
         _isOnTopRightHand = true;
-        _startVerticalSwipeXPosRight = skeleton.rightHand.xPos;
+        _startTimeSwipeDownRightHand = 0;
+        queueGestureEvent(gestures, skeleton, SWIPE_DOWN, HAND_RIGHT, GESTURE_STEP_START);
     }
 
-    // we only count significantly extended hands as performing the action
-    // will reduce accidental gestures
-    if (skeleton.rightHand.percentExtended < 80) {
-        _startTimeSwipeDownRightHand = 0;
+    if (skeleton.rightHand.yPos >= skeleton.rightShoulder.yPos
+        && skeleton.rightHand.percentExtended < 80 )
+    {
         _isOnTopRightHand = false;
-        return false;
+        queueGestureEvent(gestures, skeleton, SWIPE_DOWN, HAND_RIGHT, GESTURE_STEP_CANCELLED);
     }
 
     if (_isOnTopRightHand)
@@ -257,60 +257,60 @@ bool Swipe::detectDownSwipeGestureRightHand(Skeleton &skeleton) {
         int endTime = clock();
         float t = (float)(endTime - _startTimeSwipeDownRightHand)/CLOCKS_PER_SEC;
         if (skeleton.rightHand.yPos < skeleton.rightElbow.yPos 
-            && skeleton.rightHand.yPos < skeleton.rightHip.yPos 
+            && skeleton.rightHand.yPos < skeleton.rightHip.yPos
             && t < _SwipeMaximalDuration && t > _SwipeMinimalDuration)
         {
-            swipeDetected = true;
+            queueGestureEvent(gestures, skeleton, SWIPE_DOWN, HAND_RIGHT, GESTURE_STEP_COMPLETE);
             _startTimeSwipeDownRightHand = 0;
             _isOnTopRightHand = false;
-        } else if (skeleton.rightHand.yPos < skeleton.rightElbow.yPos 
-            && skeleton.rightHand.yPos < skeleton.rightHip.yPos ) {
-            // no swipe detected - time elapsed, but our hand is still down
-            // so make sure to get it back up - reset the steps
+        } else if ( t > _SwipeMaximalDuration ) {
             _startTimeSwipeDownRightHand = 0;
             _isOnTopRightHand = false;
+            queueGestureEvent(gestures, skeleton, SWIPE_DOWN, HAND_RIGHT, GESTURE_STEP_CANCELLED);
         }
     }
-    return swipeDetected;
 }
 
-bool Swipe::detectRightSwipeGesture(Skeleton &skeleton)
+void Swipe::detectRightSwipeGesture(std::vector<Gesture> &gestures, Skeleton &skeleton)
 {
-    bool swipeDetected = false;
-
     //If the hand is below the elbow, no swipe gesture...
     if (skeleton.leftHand.yPos < skeleton.leftElbow.yPos)
     {
         _startTimeSwipeLeft = 0;
         _isOnLeft = false;
-        return false;
+        queueGestureEvent(gestures, skeleton, SWIPE_RIGHT, HAND_LEFT, GESTURE_STEP_CANCELLED);
+        return;
     }
     //If the hand is over the head, no swipe gesture...
     if (skeleton.leftHand.yPos > skeleton.head.yPos)
     {
         _startTimeSwipeLeft = 0;
         _isOnLeft = false;
-        return false;
+        queueGestureEvent(gestures, skeleton, SWIPE_RIGHT, HAND_LEFT, GESTURE_STEP_CANCELLED);
+        return;
     }
     //If the hand is below hip, no swipe gesture...
     if (skeleton.leftHand.yPos < skeleton.leftHip.yPos)
     {
         _startTimeSwipeLeft = 0;
         _isOnLeft = false;
-        return false;
+        queueGestureEvent(gestures, skeleton, SWIPE_RIGHT, HAND_LEFT, GESTURE_STEP_CANCELLED);
+        return;
     }
     
-    //If hand is on the left of the left shoulder, start the gesture scanning when the right hand is on the soulder
+    //If hand is on the left of the left shoulder, start the gesture scanning when the left hand is on the shoulder
     if (skeleton.leftHand.xPos <= skeleton.leftShoulder.xPos)
     {
-        //If the hand is too far on the right, no swipe gesture...
-        if (skeleton.leftHand.xPos - skeleton.leftShoulder.xPos < skeleton.leftShoulder.xPos - skeleton.torso.xPos)
+        //If the hand is too far on the left, no swipe gesture...
+        if ( abs(skeleton.leftHand.xPos - skeleton.leftShoulder.xPos) > abs(skeleton.leftHand.xPos - skeleton.torso.xPos) )
         {
             _startTimeSwipeLeft = 0;
             _isOnLeft = false;
-            return false;
+            queueGestureEvent(gestures, skeleton, SWIPE_RIGHT, HAND_LEFT, GESTURE_STEP_CANCELLED);
+            return;
         }
         _isOnLeft = true;
+        queueGestureEvent(gestures, skeleton, SWIPE_RIGHT, HAND_LEFT, GESTURE_STEP_START);
     }
 
     if (_isOnLeft)
@@ -323,50 +323,54 @@ bool Swipe::detectRightSwipeGesture(Skeleton &skeleton)
         float t = (float)(endTime - _startTimeSwipeLeft)/CLOCKS_PER_SEC;
         if (skeleton.leftHand.xPos >= skeleton.torso.xPos && t < _SwipeMaximalDuration && t > _SwipeMinimalDuration)
         {
-            swipeDetected = true;
+            queueGestureEvent(gestures, skeleton, SWIPE_RIGHT, HAND_LEFT, GESTURE_STEP_COMPLETE);
             _startTimeSwipeLeft = 0;
             _isOnLeft = false;
+            return;
         }
     }
-    return swipeDetected;
+    return;
 }
 
-bool Swipe::detectLeftSwipeGesture(Skeleton &skeleton) {
-	bool swipeDetected = false;
-
-	//If the hand is below the elbow, no swipe gesture...
+void Swipe::detectLeftSwipeGesture(std::vector<Gesture> &gestures, Skeleton &skeleton) {
+    //If the hand is below the elbow, no swipe gesture...
 	if (skeleton.rightHand.yPos < skeleton.rightElbow.yPos)
 	{
 	    _startTimeSwipeRight = clock();
 	    _isOnRight = false;
-	    return false;
+        queueGestureEvent(gestures, skeleton, SWIPE_LEFT, HAND_RIGHT, GESTURE_STEP_CANCELLED);
+	    return;
 	}
 	//If the hand is over the head, no swipe gesture...
 	if (skeleton.rightHand.yPos > skeleton.head.yPos)
 	{
 	    _startTimeSwipeRight = 0;
 	    _isOnRight = false;
-	    return false;
+        queueGestureEvent(gestures, skeleton, SWIPE_LEFT, HAND_RIGHT, GESTURE_STEP_CANCELLED);
+	    return;
 	}
 	//If the hand is below hip, no swipe gesture...
 	if (skeleton.rightHand.yPos < skeleton.rightHip.yPos)
 	{
 	    _startTimeSwipeRight = clock();
 	    _isOnRight = false;
-	    return false;
+        queueGestureEvent(gestures, skeleton, SWIPE_LEFT, HAND_RIGHT, GESTURE_STEP_CANCELLED);
+	    return;
 	}
 	
 	//If hand is on the right of the right shoulder, start the gesture scanning when the right hand is on the soulder
 	if (skeleton.rightHand.xPos >= skeleton.rightShoulder.xPos) 
 	{
 	    //If the hand is too far on the right, no swipe gesture...
-	    if (skeleton.rightHand.xPos - skeleton.rightShoulder.xPos > skeleton.rightHand.xPos - skeleton.torso.xPos)
+	    if (abs(skeleton.rightHand.xPos - skeleton.rightShoulder.xPos) > abs(skeleton.rightHand.xPos - skeleton.torso.xPos))
 	    {
 	        _startTimeSwipeRight = clock();
 	        _isOnRight = false;
-	        return false;
+            queueGestureEvent(gestures, skeleton, SWIPE_LEFT, HAND_RIGHT, GESTURE_STEP_CANCELLED);
+	        return;
 	    }
 	    _isOnRight = true;
+        queueGestureEvent(gestures, skeleton, SWIPE_LEFT, HAND_RIGHT, GESTURE_STEP_START);
 	}
 
 	if (_isOnRight)
@@ -379,11 +383,57 @@ bool Swipe::detectLeftSwipeGesture(Skeleton &skeleton) {
 	    float t = (float)(endTime - _startTimeSwipeRight)/CLOCKS_PER_SEC;
 	    if (skeleton.rightHand.xPos <= skeleton.torso.xPos && t < _SwipeMaximalDuration && t > _SwipeMinimalDuration)
 	    {
-	        swipeDetected = true;
+            queueGestureEvent(gestures, skeleton, SWIPE_LEFT, HAND_RIGHT, GESTURE_STEP_COMPLETE);
 	        _startTimeSwipeRight = clock();
 	        _isOnRight = false;
+            return;
 	    }
 	}
 
-	return swipeDetected;
+	return;
+}
+
+void Swipe::queueGestureEvent(std::vector<Gesture> &gestures, Skeleton &skeleton, int type, int hand, int step) {
+    int gStepTypeIndex;
+    switch(type) {
+        case SWIPE_LEFT: gStepTypeIndex = 0; break;
+        case SWIPE_RIGHT: gStepTypeIndex = 1; break;
+        case SWIPE_UP: 
+            if (hand == LEFT_HAND) {
+                gStepTypeIndex = 2; 
+            } else {
+                gStepTypeIndex = 3; 
+            }
+            break;
+        case SWIPE_DOWN: 
+            if (hand == LEFT_HAND) {
+                gStepTypeIndex = 4; 
+            } else {
+                gStepTypeIndex = 5; 
+            }
+            break;
+        default: return;
+    }
+
+    int gStep = gestureSteps[gStepTypeIndex];
+
+    // don't allow two starts in a row
+    if (step == GESTURE_STEP_START && gStep == GESTURE_STEP_START) {
+        return;
+    }
+    // haven't started the gesture yet, why did it complete?
+    if (step == GESTURE_STEP_COMPLETE && gStep != GESTURE_STEP_START) {
+        return;
+    }
+    // haven't started the gesture yet, why did it cancel?
+    if (step == GESTURE_STEP_CANCELLED && gStep != GESTURE_STEP_START) {
+        return;
+    }
+
+    Gesture g;
+    g.type = type;
+    g.step = step;
+    g.hand = hand;
+    gestureSteps[gStepTypeIndex] = step;
+    gestures.push_back(g);
 }

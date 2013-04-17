@@ -5,15 +5,13 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <vector>
 
 static const int LEFT_HAND = 1;
 static const int RIGHT_HAND = 2;
 
 Wave::Wave() {
      gestureListeners.push_back(false);
-     gestureListeners.push_back(false);
-     gestureListeners.push_back(false);
-
     _isLeftInPosition = false;
     _isRightInPosition = false;
     _startTimeWaveLeft = 0;
@@ -27,71 +25,51 @@ Wave::Wave() {
     _sideToSideMaximalDuration = .2;
     _sideToSideMinimalDuration = .02;
     _sideToSideCountMinimal = 6;
+
+    gestureSteps.push_back(0);
+    gestureSteps.push_back(0);
 }
 
 void Wave::addGestureListener(int gestureName) {
     switch(gestureName) {
-        case WAVE_LEFT:
+        case WAVE_HAND:
             gestureListeners[0] = true;
-            break;
-        case WAVE_RIGHT:
-            gestureListeners[1] = true;
-            break;
-        case WAVE:
-            gestureListeners[2] = true;
             break;
     }
 }
 
 void Wave::removeGestureListener(int gestureName) {
     switch(gestureName) {
-        case WAVE_LEFT:
+        case WAVE_HAND:
             gestureListeners[0] = false;
-            break;
-        case WAVE_RIGHT:
-            gestureListeners[1] = false;
-            break;
-        case WAVE:
-            gestureListeners[2] = false;
             break;
     }
 }
 
 bool Wave::isActive() {
-    if ( gestureListeners[0] || gestureListeners[1] || gestureListeners[2] ) {
+    if ( gestureListeners[0] ) {
         return true;
     } else {
         return false;
     }
 }
 
-int Wave::updateSkeleton(Skeleton &sk) {
+void Wave::updateSkeleton(std::vector<Gesture> &gestures, Skeleton &sk) {
     if (gestureListeners[0]) {
-        if (detectWaveLeftHand(sk)) { return WAVE_LEFT; }
+        detectWaveLeftHand(gestures, sk);
+        detectWaveRightHand(gestures, sk);
     }
-
-    if (gestureListeners[1]) {
-        if (detectWaveRightHand(sk)) { return WAVE_RIGHT; }
-    }
-	
-    if (gestureListeners[2]) {
-        if (detectWaveLeftHand(sk)) { return WAVE; }
-        if (detectWaveRightHand(sk)) { return WAVE; }
-    }
-
-    return NO_GESTURE;
 }
 
-bool Wave::detectWaveLeftHand(Skeleton &skeleton) {
-    bool waveDetected = false;
-
-        //If the hand is below the elbow, no wave gesture...
+void Wave::detectWaveLeftHand(std::vector<Gesture> &gestures, Skeleton &skeleton) {
+    //If the hand is below the elbow, no wave gesture...
     if (skeleton.leftHand.yPos < skeleton.leftElbow.yPos)
     {
         _startTimeWaveLeft = 0;
         _isLeftInPosition = false;
         _sideToSideCountLeftHand = 0;
-        return false;
+        queueGestureEvent(gestures, skeleton, WAVE_HAND, HAND_LEFT, GESTURE_STEP_CANCELLED);
+        return;
     }
     //If the hand is over the head, no wave gesture...
     if (skeleton.leftHand.yPos > skeleton.head.yPos)
@@ -99,7 +77,8 @@ bool Wave::detectWaveLeftHand(Skeleton &skeleton) {
         _startTimeWaveLeft = 0;
         _isLeftInPosition = false;
         _sideToSideCountLeftHand = 0;
-        return false;
+        queueGestureEvent(gestures, skeleton, WAVE_HAND, HAND_LEFT, GESTURE_STEP_CANCELLED);
+        return;
     }
     //If the hand is below hip, no wave gesture...
     if (skeleton.leftHand.yPos < skeleton.leftHip.yPos)
@@ -107,7 +86,8 @@ bool Wave::detectWaveLeftHand(Skeleton &skeleton) {
         _startTimeWaveLeft = 0;
         _isLeftInPosition = false;
         _sideToSideCountLeftHand = 0;
-        return false;
+        queueGestureEvent(gestures, skeleton, WAVE_HAND, HAND_LEFT, GESTURE_STEP_CANCELLED);
+        return;
     }
 
      //If hand is on the right of the right shoulder, start the gesture scanning when the right hand is on the soulder
@@ -119,6 +99,7 @@ bool Wave::detectWaveLeftHand(Skeleton &skeleton) {
         _isLeftInPosition = true;
         _waveLeftState = AT_ORIGIN;
         _XPosWaveLeft = skeleton.leftHand.xPos;
+        queueGestureEvent(gestures, skeleton, WAVE_HAND, HAND_LEFT, GESTURE_STEP_START);
     }
 
     // hand is in position, we could be waving
@@ -155,25 +136,22 @@ bool Wave::detectWaveLeftHand(Skeleton &skeleton) {
         // also lets increment another wave so we don't count multiple gestures as we're frozen in place
         if (_sideToSideCountLeftHand == _sideToSideCountMinimal) {
             _sideToSideCountLeftHand ++;
-            waveDetected = true;
+            queueGestureEvent(gestures, skeleton, WAVE_HAND, HAND_LEFT, GESTURE_STEP_COMPLETE);
         }
 
         _XPosWaveLeft = skeleton.leftHand.xPos;
     }
-
-    return waveDetected;
 }
 
-bool Wave::detectWaveRightHand(Skeleton &skeleton) {
-    bool waveDetected = false;
-
-        //If the hand is below the elbow, no wave gesture...
+void Wave::detectWaveRightHand(std::vector<Gesture> &gestures, Skeleton &skeleton) {
+    //If the hand is below the elbow, no wave gesture...
     if (skeleton.rightHand.yPos < skeleton.rightElbow.yPos)
     {
         _startTimeWaveRight = 0;
         _isRightInPosition = false;
         _sideToSideCountRightHand = 0;
-        return false;
+        queueGestureEvent(gestures, skeleton, WAVE_HAND, HAND_RIGHT, GESTURE_STEP_CANCELLED);
+        return;
     }
     //If the hand is over the head, no wave gesture...
     if (skeleton.rightHand.yPos > skeleton.head.yPos)
@@ -181,7 +159,8 @@ bool Wave::detectWaveRightHand(Skeleton &skeleton) {
         _startTimeWaveRight = 0;
         _isRightInPosition = false;
         _sideToSideCountRightHand = 0;
-        return false;
+        queueGestureEvent(gestures, skeleton, WAVE_HAND, HAND_RIGHT, GESTURE_STEP_CANCELLED);
+        return;
     }
     //If the hand is below hip, no wave gesture...
     if (skeleton.rightHand.yPos < skeleton.rightHip.yPos)
@@ -189,7 +168,8 @@ bool Wave::detectWaveRightHand(Skeleton &skeleton) {
         _startTimeWaveRight = 0;
         _isRightInPosition = false;
         _sideToSideCountRightHand = 0;
-        return false;
+        queueGestureEvent(gestures, skeleton, WAVE_HAND, HAND_RIGHT, GESTURE_STEP_CANCELLED);
+        return;
     }
 
      //If hand is on the right of the right shoulder, start the gesture scanning when the right hand is on the soulder
@@ -201,6 +181,7 @@ bool Wave::detectWaveRightHand(Skeleton &skeleton) {
         _isRightInPosition = true;
         _waveRightState = AT_ORIGIN;
         _XPosWaveRight = skeleton.rightHand.xPos;
+        queueGestureEvent(gestures, skeleton, WAVE_HAND, HAND_RIGHT, GESTURE_STEP_START);
     }
 
     // hand is in position, we could be waving
@@ -237,11 +218,40 @@ bool Wave::detectWaveRightHand(Skeleton &skeleton) {
         // also lets increment another wave so we don't count multiple gestures as we're frozen in place
         if (_sideToSideCountRightHand == _sideToSideCountMinimal) {
             _sideToSideCountRightHand ++;
-            waveDetected = true;
+            queueGestureEvent(gestures, skeleton, WAVE_HAND, HAND_RIGHT, GESTURE_STEP_COMPLETE);
         }
 
         _XPosWaveRight = skeleton.rightHand.xPos;
     }
+}
 
-    return waveDetected;
+void Wave::queueGestureEvent(std::vector<Gesture> &gestures, Skeleton &skeleton, int type, int hand, int step) {
+    int gStepTypeIndex;
+    switch(hand) {
+        case HAND_LEFT: gStepTypeIndex = 0; break;
+        case HAND_RIGHT: gStepTypeIndex = 1; break;
+        default: return;
+    }
+
+    int gStep = gestureSteps[gStepTypeIndex];
+
+    // don't allow two starts in a row
+    if (step == GESTURE_STEP_START && gStep == GESTURE_STEP_START) {
+        return;
+    }
+    // haven't started the gesture yet, why did it complete?
+    if (step == GESTURE_STEP_COMPLETE && gStep != GESTURE_STEP_START) {
+        return;
+    }
+    // haven't started the gesture yet, why did it cancel?
+    if (step == GESTURE_STEP_CANCELLED && gStep != GESTURE_STEP_START) {
+        return;
+    }
+
+    Gesture g;
+    g.type = type;
+    g.step = step;
+    g.hand = hand;
+    gestureSteps[gStepTypeIndex] = step;
+    gestures.push_back(g);
 }

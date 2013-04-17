@@ -8,8 +8,9 @@
 #include "../enums/Skeleton.h"
 #include "../enums/Joint.h"
 #include "../enums/GestureTypes.h"
- #include "../enums/ErrorTypes.h"
-  #include "../enums/EventTypes.h"
+#include "../enums/ErrorTypes.h"
+#include "../enums/EventTypes.h"
+#include "../gestures/Gesture.h"
 #include "../gestures/GestureRecognizer.h"
 
 #include "../Common/NiteSampleUtilities.h"
@@ -34,6 +35,8 @@ int eventIDToSend;
 /** gesture ID to send - weird how it needs to be global or the pointers get all screwed up, bah humbug C++*/
 int gestureIDToSend;
 
+Gesture gestureToSend;
+
 /** boolean that indicates if worker thread should keep running */
 bool keepWorkerRunning;
 
@@ -54,6 +57,9 @@ Skeleton skeleton;
 
 /** gesture recognizer */
 GestureRecognizer gst;
+
+/** Gesture we are sending */
+Gesture sendingGesture;
 
 void frameWorker(uv_work_t *req);
 void onFrameWorkerThreadComplete(uv_work_t* req);

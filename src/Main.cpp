@@ -143,25 +143,36 @@ Handle<Value> getJoints(const Arguments& args) {
  * @param event type
  */
 void sendEventToNode(int eventType) {
-    Local<String> s = String::New(EnumMapping::mapEventToLabel(eventType).c_str());
-    Local<Value> args[] = { s }; 
-
+    Local<Object> event = Object::New();
+    event->Set(String::NewSymbol("eventType"), String::New(EnumMapping::mapEventToLabel(eventType).c_str()));
+    Local<Value> args[] = { event }; 
     Local<Value> callback_v = context_obj->Get(String::New("on"));
     if (callback_v->IsFunction()) {
         node::MakeCallback(context_obj, "on", 1, args);
     }
 }
 
-/**re
- * send event originating from the frame reader thread to Node
+/**
+ * send gesture originating from the frame reader thread to Node
  *
  * @param async handle
  * @param status (?)
  */
 void sendEventFromThreadToNode(uv_async_t *handle, int status /*UNUSED*/) {
-    int eventType = *((int*) handle->data);
-    Local<String> s = String::New(EnumMapping::mapEventToLabel(eventType).c_str());
-    Local<Value> args[] = { s }; 
+    Gesture g = *((Gesture*) handle->data);
+    Local<Object> event = Object::New();
+
+    if (g.type >= 1000 && g.type < 2000) {
+        event->Set(String::NewSymbol("eventType"), String::New("GESTURE"));
+        event->Set(String::NewSymbol("gestureType"), String::New(EnumMapping::mapEventToLabel(g.type).c_str()));
+        event->Set(String::NewSymbol("hand"), String::New(EnumMapping::mapEventToLabel(g.hand).c_str()));
+        event->Set(String::NewSymbol("step"), String::New(EnumMapping::mapEventToLabel(g.step).c_str()));
+    } else {
+        // bad I know - but we're handling gestures structs and event IDs here
+        // no idea how g.type is an int here when we're passing in a non-struct int
+        event->Set(String::NewSymbol("eventType"), String::New(EnumMapping::mapEventToLabel(g.type).c_str()));
+    }
+    Local<Value> args[] = { event }; 
     Local<Value> callback_v = context_obj->Get(String::New("on"));
     if (callback_v->IsFunction()) {
         node::MakeCallback(context_obj, "on", 1, args);
@@ -295,13 +306,16 @@ void frameWorker(uv_work_t *req) {
             } 
             else if (user.getSkeleton().getState() == nite::SKELETON_TRACKED)
             {
+
                 const nite::Skeleton &niteskeleton = user.getSkeleton();
                 mapSkeleton(skeleton, niteskeleton);
 
-                gestureIDToSend = gst.updateSkeleton(skeleton);
+                std::vector<Gesture> gestures;
+                gst.updateSkeleton(gestures, skeleton);
 
-                if (gestureIDToSend != NO_GESTURE) {
-                    async.data = (void*) &gestureIDToSend;
+                for (unsigned int c = 0; c < gestures.size(); c++) {
+                    sendingGesture = gestures[c];
+                    async.data = (void*) &sendingGesture;
                     uv_async_send(&async);
                 }
             }
@@ -358,7 +372,7 @@ Local<Object> mapJointToNodeObject(char *jointName) {
 }
 
 /**
- * map skeleton to internal skeleyon struct
+ * map skeleton to internal skeleyon stet
  *
  * Skeleton skeleton
  * nite::Skeleton niteskeleton

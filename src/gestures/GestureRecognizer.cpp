@@ -35,15 +35,11 @@ void GestureRecognizer::removeGestureListener(int gestureCategory, int gestureNa
 	}
 }
 
-int GestureRecognizer::updateSkeleton(Skeleton &sk) {
-	int g = NO_GESTURE;
+void GestureRecognizer::updateSkeleton(std::vector<Gesture> &gestures, Skeleton &sk) {
 	if (gSwipe.isActive()) {
-		g = gSwipe.updateSkeleton(sk);
-		if (g != NO_GESTURE) return g; 
+		gSwipe.updateSkeleton(gestures, sk);
 	}
 	if (gWave.isActive()) {
-		g = gWave.updateSkeleton(sk);
-		if (g != NO_GESTURE) return g; 
+		gWave.updateSkeleton(gestures, sk);
 	}
-	return g;
 }

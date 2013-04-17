@@ -20,6 +20,14 @@ namespace EnumMapping {
             return mapGestureToLabel(event);
         }
 
+        if (event >= 3000 && event < 4000) {
+            return mapGestureStepToLabel(event);
+        }
+
+        if (event >= 4000 && event < 5000) {
+            return mapJointToLabel(event);
+        }
+
         if (event >= 9000 && event < 10000) {
             return mapErrorToLabel(event);
         }
@@ -62,6 +70,67 @@ namespace EnumMapping {
     }
 
     /**
+     * map joint ID to NodeJS String
+     *
+     * @param jotin ID
+     * @return string
+     */
+    std::string mapJointToLabel(int event) {
+        switch (event) {
+            case HAND_RIGHT:
+                return "RIGHT_HAND";
+            case HAND_LEFT:
+                return "LEFT_HAND";
+            default:
+                return "No hand found";
+        }
+    }
+
+    /**
+     * map joint name to int
+     *
+     * @param joint name
+     * @return gesture id
+     */
+    int mapJointToLabel(std::string name) {
+        if (name == "RIGHT_HAND") return HAND_RIGHT;
+        if (name == "LEFT_HAND") return HAND_LEFT;
+        return -1;
+    }
+
+    /**
+     * map gesture step
+     *
+     * @param gesture step ID
+     * @return string
+     */
+    std::string mapGestureStepToLabel(int event) {
+        switch (event) {
+            case GESTURE_STEP_START:
+                return "GESTURE_START";
+            case GESTURE_STEP_COMPLETE:
+                return "GESTURE_COMPLETE";
+            case GESTURE_STEP_CANCELLED:
+                return "GESTURE_CANCELLED";
+            default:
+                return "No step found";
+        }
+    }
+
+    /**
+     * map hand name to int
+     *
+     * @param hand name
+     * @return gesture id
+     */
+    int mapGestureStepToLabel(std::string name) {
+        if (name == "GESTURE_START") return GESTURE_STEP_START;
+        if (name == "GESTURE_COMPLETE") return GESTURE_STEP_COMPLETE;
+        if (name == "GESTURE_CANCELLED") return GESTURE_STEP_CANCELLED;
+        return -1;
+    }
+
+    /**
      * map gesture ID to NodeJS String
      *
      * @param gesture ID
@@ -77,12 +146,8 @@ namespace EnumMapping {
                 return "SWIPE_UP";
             case SWIPE_DOWN:
                 return "SWIPE_DOWN";
-            case WAVE_LEFT:
-                return "WAVE_LEFT";
-            case WAVE_RIGHT:
-                return "WAVE_RIGHT";
-            case WAVE:
-                return "WAVE_ANY";
+            case WAVE_HAND:
+                return "WAVE_HAND";
             default:
                 return "No known event type found";
         }
@@ -101,9 +166,7 @@ namespace EnumMapping {
         if (name == "SWIPE_RIGHT") return SWIPE_RIGHT;
         if (name == "SWIPE_UP") return SWIPE_UP;
         if (name == "SWIPE_DOWN") return SWIPE_DOWN;
-        if (name == "WAVE_LEFT") return WAVE_LEFT;
-        if (name == "WAVE_RIGHT") return WAVE_RIGHT;
-        if (name == "WAVE_ANY") return WAVE;
+        if (name == "WAVE_HAND") return WAVE_HAND;
         return -1;
     }
 

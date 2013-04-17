@@ -75,6 +75,20 @@ node-gyp rebuild
 This will create the build/Release folder with the Node.js AddOn inside (nuimotion.node).
 
 
+To make this plugin for use on Node Webkit (https://github.com/rogerwang/nw-gyp)
+
+npm install -g nw-gyp
+
+Once installed, traverse to this project's src folder and run nw-gyp:
+
+nw-gyp configure --target=0.4.2 (or the current version of Node Webkit you have)
+
+nw-gyp build
+
+This will create the build/Release folder with the Node.js AddOn inside for use with Node Webkit (nuimotion.node).
+
+
+
 Build Dependencies
 ----------------------------------
 

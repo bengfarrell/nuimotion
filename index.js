@@ -32,7 +32,9 @@ module.exports.Events.Gestures.Wave = {};
 module.exports.Events.Gestures.Wave.WAVE = "WAVE_GESTURE";
 
 /** gesture types */
-module.exports.Events.Gestures.Wave.types = {left: "WAVE_LEFT", right: "WAVE_RIGHT", any: "WAVE_ANY"};
+module.exports.Events.Gestures.Wave.types = {hand: "WAVE_HAND"};
+
+module.exports.Events.GESTURE = "GESTURE";
 module.exports.Events.DEVICE_INITIALIZED = "DEVICE_INITIALIZED";
 module.exports.Events.DEVICE_ERROR = "DEVICE_ERROR";
 module.exports.Events.NEW_USER = "NEW_USER";
@@ -156,17 +158,17 @@ module.exports._onFrameLoopUpdate = function() {
  * also, listen for when skeleton is tracking to start frame loop
  * @param name
  */
-module.exports.context.on = function(name) {
+module.exports.context.on = function(event) {
     // send on device/gesture event
-    if (module.exports._eventCallbackDict[name]) {
-        module.exports._eventCallbackDict[name].apply(this, [name]);
+    if (module.exports._eventCallbackDict[event.eventType]) {
+        module.exports._eventCallbackDict[event.eventType].apply(this, [event]);
     }
 
-    if (module.exports._gestureCallbackDict[name]) {
-        module.exports._gestureCallbackDict[name].apply(this, [name]);
+    if (event.eventType == "GESTURE" && module.exports._gestureCallbackDict[event.gestureType]) {
+        module.exports._gestureCallbackDict[event.gestureType].apply(this, [event]);
     }
 
-    switch (name) {
+    switch (event.eventType) {
         case module.exports.Events.SKELETON_TRACKING:
             // skeleton has started tracking, start frame/update loop
             if (!module.exports._frameLoopTimer && module.exports.onSkeletonEventHandler) {

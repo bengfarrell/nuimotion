@@ -1,6 +1,7 @@
 #include "../enums/Joint.h"
 #include "../enums/Skeleton.h"
 #include "../enums/GestureTypes.h"
+#include "../gestures/Gesture.h"
 #include <time.h>
 #include <vector>
 
@@ -21,9 +22,10 @@ class Wave {
                 void removeGestureListener(int gestureName);
                 bool isActive();
 
-                int updateSkeleton(Skeleton &sk);
-                bool detectWaveLeftHand(Skeleton &skeleton);
-                bool detectWaveRightHand(Skeleton &skeleton);
+                void queueGestureEvent(std::vector<Gesture> &gestures, Skeleton &skeleton, int type, int hand, int step);
+                void updateSkeleton(std::vector<Gesture> &gestures, Skeleton &sk);
+                void detectWaveLeftHand(std::vector<Gesture> &gestures, Skeleton &skeleton);
+                void detectWaveRightHand(std::vector<Gesture> &gestures, Skeleton &skeleton);
 
 	protected:
                 bool _isLeftInPosition;
@@ -43,6 +45,7 @@ class Wave {
                 float _sideToSideMinimalDuration;
                 int _sideToSideCountMinimal;
 
+                std::vector<int> gestureSteps;
                 std::vector<bool> gestureListeners;
 };
 
