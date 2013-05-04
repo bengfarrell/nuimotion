@@ -1,43 +1,37 @@
 {
-  "name": "nuimotion",
-  "description": "NuiMotion - Depth Sensor bindings for your Natural User Interaction web use",
-  "keywords": [
-    "openni",
-    "kinect",
-    "xtion",
-    "depth sensor",
-    "gestures",
-    "skeleton tracking",
-    "nui"
-  ],
-    "scripts": {
-        "install": "node-gyp rebuild"
+    "name": "nuimotion",
+    "description": "NuiMotion - Depth Sensor bindings for your Natural User Interaction web use",
+    "keywords": [
+        "openni",
+        "kinect",
+        "xtion",
+        "depth sensor",
+        "gestures",
+        "skeleton tracking",
+        "nui"
+    ],
+    "author": {
+        "name": "Ben Farrell",
+        "email": "ben@benfarrell.com",
+        "url": "http://www.benfarrell.com/"
     },
-  "author": {
-    "name": "Ben Farrell",
-    "email": "ben@benfarrell.com",
-    "url": "http://www.benfarrell.com/"
-  },
-  "version": "0.1.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/bengfarrell/nuimotion"
-  },
-  "engines": {
-    "node": ">=0.6.10"
-  },
-  "config": {
-    "verbose": false
-  },
-  "scripts": {
-    "install": "node install.js"
-  },
-  "main": "index",
-  "directories": {
-    "lib": "./lib"
-  },
-  "readme": "",
-  "readmeFilename": "README.md",
-  "_id": "nuimotion@0.1.0",
-  "_from": "nuimotion"
+    "version": "0.1.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/bengfarrell/nuimotion"
+    },
+    "engines": {
+        "node": ">=0.6.10"
+    },
+    "config": {
+        "verbose": false
+    },
+    "main": "index",
+    "directories": {
+        "lib": "./lib"
+    },
+    "readme": "",
+    "readmeFilename": "README.md",
+    "_id": "nuimotion@0.1.0",
+    "_from": "nuimotion"
 }
