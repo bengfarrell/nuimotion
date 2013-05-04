@@ -18,6 +18,8 @@ module.exports.Joints.HEAD = "head";
 
 module.exports.Events = {};
 module.exports.Events.Gestures = {};
+module.exports.Events.Gestures.Progress = { start: "GESTURE_START", complete: "GESTURE_COMPLETE", cancelled: "GESTURE_CANCELLED" };
+
 module.exports.Events.Gestures.Swipe = {};
 
 /** gesture category */
