@@ -6,6 +6,8 @@
     "kinect",
     "xtion",
     "depth sensor",
+    "gestures",
+    "skeleton tracking",
     "nui"
   ],
     "scripts": {
@@ -16,7 +18,7 @@
     "email": "ben@benfarrell.com",
     "url": "http://www.benfarrell.com/"
   },
-  "version": "0.0.1",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/bengfarrell/nuimotion"
@@ -36,9 +38,6 @@
   },
   "readme": "",
   "readmeFilename": "README.md",
-  "_id": "nuimotion@0.0.1",
-  "dist": {
-    "shasum": "xxxx"
-  },
+  "_id": "nuimotion@0.1.0",
   "_from": "nuimotion"
 }
