@@ -1,5 +1,5 @@
 {
-  "name": "nuiMotion",
+  "name": "nuimotion",
   "description": "NuiMotion - Depth Sensor bindings for your Natural User Interaction web use",
   "keywords": [
     "openni",
@@ -28,9 +28,6 @@
   },
   "config": {
     "verbose": false
-  },
-  "scripts": {
-    "install": "node install.js"
   },
   "main": "index",
   "directories": {
