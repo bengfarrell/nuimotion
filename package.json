@@ -10,6 +10,9 @@
     "skeleton tracking",
     "nui"
   ],
+  "scripts": {
+    "preinstall": "node-gyp configure build"
+  },
   "author": {
     "name": "Ben Farrell",
     "email": "ben@benfarrell.com",
