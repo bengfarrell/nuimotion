@@ -252,7 +252,7 @@ Handle<Value> initialize(const Arguments& args) {
 
     uv_work_t *req = new uv_work_t;
     uv_async_init(uv_default_loop(), &async, sendEventFromThreadToNode);
-    uv_queue_work(uv_default_loop(), req, frameWorker, onFrameWorkerThreadComplete);
+    uv_queue_work(uv_default_loop(), req, frameWorker, (uv_after_work_cb)onFrameWorkerThreadComplete);
     uv_ref((uv_handle_t *)&async);
 
     return scope.Close(Undefined());
