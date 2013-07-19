@@ -1,12 +1,13 @@
 #include <node.h>
 #include <v8.h>
+#include <node_buffer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
 #include <OpenNI.h>
-#include "../Common/OniSampleUtilities.h"
 
 using namespace v8;
+using namespace node;
 using namespace openni;
 
 /* thread loop */
@@ -42,12 +43,17 @@ int dFrameHeight;
 /* frame width */
 int dFrameWidth;
 
+/* frame data size */
+int dFrameDataSize;
+
 /* frame height */
 int rgbFrameHeight;
 
 /* frame width */
 int rgbFrameWidth;
 
+/* frame data size */
+int rgbFrameDataSize;
 
 void frameWorker(uv_work_t *req);
 void onFrameWorkerThreadComplete(uv_work_t* req);
