@@ -1,9 +1,10 @@
-/** 
+/**
  * Activity using OpenNI to do depth tracking
  */
 
 #include <node.h>
 #include <v8.h>
+#include <node_buffer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -12,6 +13,7 @@
 #include "Depth.h"
 
 using namespace v8;
+using namespace node;
 using namespace openni;
 
 /**
@@ -29,7 +31,7 @@ void init(Handle<Object> target) {
         FunctionTemplate::New(getDepthFrame)->GetFunction());
     target->Set(String::NewSymbol("getRGBFrame"),
         FunctionTemplate::New(getRGBFrame)->GetFunction());
-    context_obj = Persistent<Object>::New(Object::New()); 
+    context_obj = Persistent<Object>::New(Object::New());
     target->Set(String::New("context"), context_obj);
 }
 
@@ -46,8 +48,32 @@ Handle<Value> getDepthFrame(const Arguments& args) {
     obj->Set(String::NewSymbol("width"), Number::New( dFrameWidth ));
     obj->Set(String::NewSymbol("height"), Number::New( dFrameHeight ));
 
-    // Don't know how to convert this or pass to Node
-    //obj->Set(String::NewSymbol("data"), String::NewSymbol(dFrame.getData()));
+    // This is Buffer that actually makes heap-allocated raw binary available
+    // to userland code.
+    node::Buffer *slowBuffer = node::Buffer::New(dFrameDataSize);
+
+    // Buffer:Data gives us a void* pointer to use.
+    memcpy(node::Buffer::Data(slowBuffer), dFrame.getData(), dFrameDataSize);
+
+    // We need to create the JS version of the Buffer.
+    // To do that we need to actually pull it from the execution context.
+    // First step is to get a handle to the global object.
+    v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
+
+    // Now we need to grab the Buffer constructor function.
+    v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
+
+    // We can use this constructor function to allocate new Buffers.
+    // First we need to provide the correct arguments.
+    // First argument is the JS object Handle for the SlowBuffer.
+    // Second arg is the length of the SlowBuffer.
+    // Third arg is the offset in the SlowBuffer we want the .. "Fast"Buffer to start at.
+    v8::Handle<v8::Value> constructorArgs[3] = { slowBuffer->handle_, v8::Integer::New(dFrameDataSize), v8::Integer::New(0) };
+
+    // Now we have our constructor, and our constructor args.
+    v8::Local<v8::Object> dBuffer = bufferConstructor->NewInstance(3, constructorArgs);
+
+    obj->Set(String::NewSymbol("data"), dBuffer);
 
     return scope.Close(obj);
 }
@@ -65,16 +91,40 @@ Handle<Value> getRGBFrame(const Arguments& args) {
     obj->Set(String::NewSymbol("width"), Number::New( rgbFrameWidth ));
     obj->Set(String::NewSymbol("height"), Number::New( rgbFrameHeight ));
 
-    // Don't know how to convert this or pass to Node
-    //obj->Set(String::NewSymbol("data"), String::NewSymbol(rgbFrame.getData()));
+    // This is Buffer that actually makes heap-allocated raw binary available
+    // to userland code.
+    node::Buffer *slowBuffer = node::Buffer::New(rgbFrameDataSize);
+
+    // Buffer:Data gives us a void* pointer to use.
+    memcpy(node::Buffer::Data(slowBuffer), rgbFrame.getData(), rgbFrameDataSize);
+
+    // We need to create the JS version of the Buffer.
+    // To do that we need to actually pull it from the execution context.
+    // First step is to get a handle to the global object.
+    v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
+
+    // Now we need to grab the Buffer constructor function.
+    v8::Local<v8::Function> bufferConstructor = v8::Local<v8::Function>::Cast(globalObj->Get(v8::String::New("Buffer")));
+
+    // We can use this constructor function to allocate new Buffers.
+    // First we need to provide the correct arguments.
+    // First argument is the JS object Handle for the SlowBuffer.
+    // Second arg is the length of the SlowBuffer.
+    // Third arg is the offset in the SlowBuffer we want the .. "Fast"Buffer to start at.
+    v8::Handle<v8::Value> constructorArgs[3] = { slowBuffer->handle_, v8::Integer::New(rgbFrameDataSize), v8::Integer::New(0) };
+
+    // Now we have our constructor, and our constructor args.
+    v8::Local<v8::Object> rgbBuffer = bufferConstructor->NewInstance(3, constructorArgs);
+
+    obj->Set(String::NewSymbol("data"), rgbBuffer);
 
     return scope.Close(obj);
 }
 
 
-/** 
+/**
  * shutdown/cleanup OpenNI
- * 
+ *
  * @param args (none used)
  */
 Handle<Value> close(const Arguments& args) {
@@ -161,12 +211,12 @@ Handle<Value> initialize(const Arguments& args) {
 void onFrameWorkerThreadComplete(uv_work_t *req) {
     fprintf(stderr, "OpenNI Processing Complete\n");
     uv_close((uv_handle_t*) &async, NULL);
-} 
+}
 
 /**
  * process frames in separate thread
  *
- * @param request thread 
+ * @param request thread
  */
 void frameWorker(uv_work_t *req) {
     while (keepWorkerRunning) {
@@ -192,12 +242,11 @@ void frameWorker(uv_work_t *req) {
 
         dFrameHeight = dFrame.getHeight();
         dFrameWidth = dFrame.getWidth();
+        dFrameDataSize = dFrame.getDataSize();
+
         rgbFrameHeight = rgbFrame.getHeight();
         rgbFrameWidth = rgbFrame.getWidth();
-
-        // don't know what to do here - would probably like to throw dFrame and rgbFrame data into
-        // some kind of data buffer that can be sent over to Node.js
-        //DepthPixel* pDepth = (DepthPixel*)dFrame.getData();
+        rgbFrameDataSize = rgbFrame.getDataSize();
     }
 }
 
