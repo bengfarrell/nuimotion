@@ -1,4 +1,4 @@
-module.exports = require('./src/build/Release/nuimotion.node');
+module.exports = require('./build/Release/nuimotion.node');
 
 module.exports.Joints = {};
 module.exports.Joints.LEFT_HAND = "left_hand";

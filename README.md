@@ -12,3 +12,11 @@ To get started, checkout the NuiMotion Wiki:
 [https://github.com/bengfarrell/nuimotion/wiki](https://github.com/bengfarrell/nuimotion/wiki)
 
 The wiki covers system requirements, installation, building, and basic usage/documentation.
+
+
+Installation
+-------------
+
+Be sure to install both OpenNI2 and NITE2 from www.openni.org
+Create environment variables called OPENNI2 and NITE2 to point to the prior install (root install folder, don't include "Lib", "Include", or "Redist" in path)
+Finally, run npm install nuimotion - or if already present, node-gyp clean rebuild from the nuimotion folder
