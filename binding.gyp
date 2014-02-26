@@ -48,10 +48,9 @@
             }
         ],
         "include_dirs": [   "./src/enums",
+                            "./build/Release",
                             "<(OPENNI2)/Include/",
-                            "<(NITE2)/Include/",
-                            "<(OPENNI2)/Redist/",
-                            "<(NITE2)/Redist/"],
+                            "<(NITE2)/Include/" ],
 
         "libraries": ["-l<(OPENNI2)/Lib/OpenNI2", "-l<(NITE2)/Lib/NiTE2"]
     },
@@ -80,7 +79,7 @@
                 "destination": "<(module_root_dir)/build/Release/"
             }
         ],
-        "include_dirs": [ "<(OPENNI2)/Include/", "<(OPENNI2)/Redist/"],
+        "include_dirs": [ "<(OPENNI2)/Include/"],
         "libraries": ["-l<(OPENNI2)/Lib/OpenNI2"]
     }
   ]

@@ -201,25 +201,61 @@ Handle<Value> close(const Arguments& args) {
 Handle<Value> initialize(const Arguments& args) {
     HandleScope scope;
 
-    nite::Status niteRc;
+    openni::Status rc = openni::OpenNI::initialize();
+	if (rc != openni::STATUS_OK)
+	{
+		printf("Failed to initialize OpenNI\n%s\n", openni::OpenNI::getExtendedError());
+	    sendEventToNode(ERROR_NITE_INITIALIZATION);
+        return scope.Close( Undefined() );
+	}
+
+	const char* deviceUri = openni::ANY_DEVICE;
+	/*for (int i = 1; i < argc-1; ++i)
+	{
+		if (strcmp(argv[i], "-device") == 0)
+		{
+			deviceUri = argv[i+1];
+			break;
+		}
+	}*/
+
+	rc = device.open(deviceUri);
+	if (rc != openni::STATUS_OK)
+	{
+	    fprintf(stderr, "Failed to open device\n%s\n", openni::OpenNI::getExtendedError());
+		sendEventToNode(ERROR_NITE_INITIALIZATION);
+        return scope.Close( Undefined() );
+	}
+
+	nite::NiTE::initialize();
+	if (userTracker.create(&device) != nite::STATUS_OK)
+	{
+	    fprintf(stderr, "Failed to create NiTE user\n%s\n", openni::OpenNI::getExtendedError());
+        sendEventToNode(ERROR_NITE_INITIALIZATION);
+        return scope.Close( Undefined() );
+	}
+
+   // nite::Status niteRc;
 
     fprintf(stderr, "Initialize Depth Camera\n");
     
-    niteRc = nite::NiTE::initialize();
+   /* niteRc = nite::NiTE::initialize();
     if (niteRc != nite::STATUS_OK)
     {
         fprintf(stderr, "NiTE initialization failed\n");
-        sendEventToNode(ERROR_NITE_INITIALIZATION);
-        return scope.Close( Undefined() );
+        printf("Err code %s", openni::OpenNI::getExtendedError());
+        //sendEventToNode(ERROR_NITE_INITIALIZATION);
+        //return scope.Close( Undefined() );
     }
 
     niteRc = userTracker.create();
     if (niteRc != nite::STATUS_OK)
     {
         fprintf(stderr, "Couldn't create user tracker\n");
-        sendEventToNode(ERROR_USER_TRACKER_CREATION);
-        return scope.Close(Undefined());
+        //sendEventToNode(ERROR_USER_TRACKER_CREATION);
+        //return scope.Close(Undefined());
     }
+*/
     fprintf(stderr,"Start moving around to get detected...\n");
 
     keepWorkerRunning = true;
@@ -303,7 +339,7 @@ void frameWorker(uv_work_t *req) {
                 skeleton.torso.isActive = false;
                 skeleton.rightHip.isActive = false;
                 skeleton.leftHip.isActive = false;
-            } 
+            }
             else if (user.getSkeleton().getState() == nite::SKELETON_TRACKED)
             {
 
@@ -442,18 +478,15 @@ void updateUserState(const nite::UserData& user)
         async.data = (void*) &eventIDToSend;
         uv_async_send(&async);
     } else if (!isUserVisible && user.isVisible() && user.getId() == 1) {
-        isUserVisible = true;
+        isUserVisible = 1;
         eventIDToSend = USER_IS_VISIBLE;
         async.data = (void*) &eventIDToSend;
         uv_async_send(&async);
     } else if (isUserVisible && !user.isVisible() && user.getId() == 1) {
-        isUserVisible = false;
+        isUserVisible = 0;
         eventIDToSend = USER_IS_OUT_OF_SCENE;
         async.data = (void*) &eventIDToSend;
         uv_async_send(&async);
-    } else if (user.isLost()) {
-        // why doesn't this fire?
-        // maybe two users are needed?
     }
 
     g_visibleUsers[user.getId()] = user.isVisible();

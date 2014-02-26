@@ -26,6 +26,9 @@ uv_async_t async;
 /* context for sending NodeJS callbacks */
 Persistent<Object> context_obj;
 
+/** device to open */
+openni::Device device;
+
 /** user tracker */
 nite::UserTracker userTracker;
 
@@ -41,7 +44,7 @@ Gesture gestureToSend;
 bool keepWorkerRunning;
 
 /** is user visible */
-bool isUserVisible;
+int isUserVisible;
 
 /** is user in scene */
 bool isUserInScene;
