@@ -25,19 +25,21 @@
                             "<(OPENNI2)/Redist/OpenNI2/Drivers/PSLink.ini"],
                 "destination": "<(module_root_dir)/build/Release/OpenNI2/Drivers/"
             },
+
+            # If NITE folder is not placed at root of project, it cannot be accessed
             {
                 "files": [  "<(NITE2)/Redist/NiTE2/Data/lbsdata.idx",
                             "<(NITE2)/Redist/NiTE2/Data/lbsdata.lbd",
                             "<(NITE2)/Redist/NiTE2/Data/lbsparam1.lbd",
                             "<(NITE2)/Redist/NiTE2/Data/lbsparam2.lbd"],
-                "destination": "<(module_root_dir)/build/Release/NiTE2/Data/"
+                "destination": "<(module_root_dir)/../../NiTE2/Data/"
             },
             {
                 "files": [  "<(NITE2)/Redist/NiTE2/FeatureExtraction.ini",
                             "<(NITE2)/Redist/NiTE2/h.dat",
                             "<(NITE2)/Redist/NiTE2/HandAlgorithms.ini",
                             "<(NITE2)/Redist/NiTE2/s.dat"],
-                "destination": "<(module_root_dir)/build/Release/NiTE2/"
+                "destination": "<(module_root_dir)/../../NiTE2/"
             },
             {
                 "files": [  "<(OPENNI2)/Redist/OpenNI2.dll",
