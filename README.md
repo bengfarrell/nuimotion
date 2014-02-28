@@ -357,3 +357,336 @@ Bus 002 Device 005: ID 045e:02b0 Microsoft Corp. Xbox NUI Motor
 Bus 002 Device 007: ID 045e:02ae Microsoft Corp. Xbox NUI Camera
 ```
 
+Installation on OSX using the Kinect and Freenect
+====================================================
+
+note: these instructions are provided by @gordonturner, and are greatly appreciated. After this contribution by Gordon, I have released NuiMotion 0.2.0 which may alter his install instructions. If you see errors, please feel free to contribute back. These instructions worked as of NuiMotion 0.1.2
+
+- Installation notes for OSX Mavericks.
+
+- NOTE: All code is installed to ~/Developer/Work
+
+
+Install Updates
+---------------
+
+- Update system, run App Store, Updates
+
+- Run Xcode and agree to terms and finish installation:
+```
+Xcode
+```
+
+
+Install brew
+------------
+
+- Install Homebrew, note this will prompt for root password and install command line developer tools:
+```
+ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
+```
+
+- Update and check brew:
+```
+brew update
+brew doctor
+```
+
+- NOTE: Tested with version 0.9.5
+
+
+Install freenect from github
+----------------------------
+
+- Install dependencies:
+```
+brew uninstall libusb
+brew install libusb --universal
+brew install cmake
+```
+
+- Clone libfreenect:
+```
+mkdir -p ~/Developer/Work
+cd ~/Developer/Work
+git clone https://github.com/OpenKinect/libfreenect
+cd libfreenect
+git checkout tags/v0.3.0
+```
+
+- NOTE: Tested with stable release v0.3.0
+
+- Build and install:
+```
+mkdir build
+cd build
+cmake .. -DBUILD_OPENNI2_DRIVER=ON
+make
+sudo make install
+```
+
+- Test with glview:
+```
+sudo glview
+```
+
+- Reference:
+https://github.com/OpenKinect/libfreenect
+http://openkinect.org/wiki/Getting_Started
+
+
+Install node.js
+---------------
+
+- Install node.js:
+http://nodejs.org/download/
+
+- NOTE: Tested with v0.10.23
+
+
+Install OpenNI and NiTE
+-----------------------
+
+- Download OpenNI from:
+http://www.openni.org/openni-sdk/
+
+- Uncompress OpenNI and move:
+```
+unzip OpenNI-MacOSX-x64-2.2.0.33.tar.zip
+tar xvf OpenNI-MacOSX-x64-2.2.tar.bz2
+mv OpenNI-MacOSX-x64-2.2 ~/Developer/Work/
+cd ~/Developer/Work/OpenNI-MacOSX-x64-2.2
+sudo ./install.sh
+```
+
+- Download NiTE from:
+http://www.openni.org/files/nite/
+
+- Uncompress NiTE and move:
+```
+unzip NiTE-MacOSX-x64-2.2.tar1.zip
+tar xvf NiTE-MacOSX-x64-2.2.tar.bz2
+mv NiTE-MacOSX-x64-2.2 ~/Developer/Work/
+cd ~/Developer/Work/NiTE-MacOSX-x64-2.2
+sudo ./install.sh
+```
+
+- Copy libFreenectDriver.so to OpenNI2 directory:
+```
+cp /usr/local/lib/OpenNI2-FreenectDriver/libFreenectDriver.dylib \
+~/Developer/Work/OpenNI-MacOSX-x64-2.2/Redist/OpenNI2/Drivers/
+```
+
+- Copy all libraries to `/usr/local/lib` 
+```
+sudo cp -R ~/Developer/Work/OpenNI-MacOSX-x64-2.2/Redist/* /usr/local/lib
+sudo cp -R ~/Developer/Work/NiTE-MacOSX-x64-2.2/Redist/* /usr/local/lib
+```
+
+- Add to library path:
+```
+vi ~/.bash_profile
+```
+```
+export DYLD_LIBRARY_PATH=/usr/local/lib64/:/usr/local/lib64/OpenNI2-FreenectDriver/:/usr/local/lib:$DYLD_LIBRARY_PATH
+```
+
+- Add OpenNI and NiTE to .bash_profile:
+```
+cat ~/Developer/Work/OpenNI-MacOSX-x64-2.2/OpenNIDevEnvironment >> ~/.bash_profile
+cat ~/Developer/Work/NiTE-MacOSX-x64-2.2/NiTEDevEnvironment >> ~/.bash_profile
+```
+
+- Logout and log back in to include changes made to .bash_profile.
+
+
+Install Nuimotion and Websocket
+-------------------------------
+
+- Make project directory:
+```
+mkdir ~/Developer/Work/prototype-nuimotion/
+```
+
+- Copy Redist files to the root of the app:
+```
+cp -R ~/Developer/Work/NiTE-MacOSX-x64-2.2/Redist/* ~/Developer/Work/prototype-nuimotion/
+cp -R ~/Developer/Work/OpenNI-MacOSX-x64-2.2/Redist/* ~/Developer/Work/prototype-nuimotion/
+```
+
+- Install `websocket`:
+```
+npm install websocket
+```
+
+- Install `node-gyp`:
+```
+sudo npm install -g node-gyp
+```
+
+- Create `prototype-nuimotion` and download the nuimotion project to the node_modules directory:
+```
+mkdir ~/Developer/Work/prototype-nuimotion/node_modules
+cd ~/Developer/Work/prototype-nuimotion/node_modules
+wget https://github.com/bengfarrell/nuimotion/archive/master.zip
+unzip master.zip
+mv nuimotion-master nuimotion
+rm master.zip
+```
+
+
+- Rebuild:
+```
+cd ~/Developer/Work/prototype-nuimotion/node_modules/nuimotion
+node-gyp rebuild
+```
+
+
+- Edit index.js to fix require, remove 'src' prefix in first line:
+```
+vi ~/Developer/Work/prototype-nuimotion/node_modules/nuimotion/index.js
+```
+
+```
+module.exports = require('./build/Release/nuimotion.node');
+...
+```
+
+
+- Copy basicquickstart.js and run:
+```
+cp ~/Developer/Work/prototype-nuimotion/node_modules/nuimotion/quickstart/basicquickstart.js ~/Developer/Work/prototype-nuimotion/
+cd ~/Developer/Work/prototype-nuimotion/
+sudo node basicquickstart.js
+```
+
+- Reference:
+http://www.kdab.com/setting-up-kinect-for-programming-in-linux-part-1/
+http://overconsulting.net/blog/installation-d-une-kinect-sous-ubuntu-13-10-openni2-freenect-nite2
+
+
+
+
+
+
+
+Error rebuilding from {mynodeproject}/node_modules/nuimotion/src
+----------------------------------------------------------------
+
+```
+Once installed,navigate to this project's src folder:
+
+{mynodeproject}/node_modules/nuimotion/src
+
+and run node-gyp:
+
+node-gyp rebuild
+```
+
+- The rebuild step fails, cannot find binding.gyp:
+
+```
+steve:node_modules gturner$ pwd
+/Users/gturner/Developer/Work/prototype-nuimotion/node_modules
+steve:node_modules gturner$ cd ~/Developer/Work/prototype-nuimotion/node_modules/nuimotion/src
+steve:src gturner$ node-gyp rebuild
+gyp info it worked if it ends with ok
+gyp info using node-gyp@0.12.2
+gyp info using node@0.10.23 | darwin | x64
+gyp WARN EACCES user "gturner" does not have permission to access the dev dir "/Users/gturner/.node-gyp/0.10.23"
+gyp WARN EACCES attempting to reinstall using temporary dev dir "/var/folders/bz/r8sdtrc11fb_jsvlhzyqjjh80000gn/T/.node-gyp"
+gyp info spawn python
+gyp info spawn args [ '/usr/local/lib/node_modules/node-gyp/gyp/gyp_main.py',
+gyp info spawn args   'binding.gyp',
+gyp info spawn args   '-f',
+gyp info spawn args   'make',
+gyp info spawn args   '-I',
+gyp info spawn args   '/Users/gturner/Developer/Work/prototype-nuimotion/node_modules/nuimotion/src/build/config.gypi',
+gyp info spawn args   '-I',
+gyp info spawn args   '/usr/local/lib/node_modules/node-gyp/addon.gypi',
+gyp info spawn args   '-I',
+gyp info spawn args   '/var/folders/bz/r8sdtrc11fb_jsvlhzyqjjh80000gn/T/.node-gyp/0.10.23/common.gypi',
+gyp info spawn args   '-Dlibrary=shared_library',
+gyp info spawn args   '-Dvisibility=default',
+gyp info spawn args   '-Dnode_root_dir=/var/folders/bz/r8sdtrc11fb_jsvlhzyqjjh80000gn/T/.node-gyp/0.10.23',
+gyp info spawn args   '-Dmodule_root_dir=/Users/gturner/Developer/Work/prototype-nuimotion/node_modules/nuimotion/src',
+gyp info spawn args   '--depth=.',
+gyp info spawn args   '--generator-output',
+gyp info spawn args   'build',
+gyp info spawn args   '-Goutput_dir=.' ]
+gyp: binding.gyp not found (cwd: /Users/gturner/Developer/Work/prototype-nuimotion/node_modules/nuimotion/src)
+gyp ERR! configure error 
+gyp ERR! stack Error: `gyp` failed with exit code: 1
+gyp ERR! stack     at ChildProcess.onCpExit (/usr/local/lib/node_modules/node-gyp/lib/configure.js:337:16)
+gyp ERR! stack     at ChildProcess.EventEmitter.emit (events.js:98:17)
+gyp ERR! stack     at Process.ChildProcess._handle.onexit (child_process.js:789:12)
+gyp ERR! System Darwin 13.0.0
+gyp ERR! command "node" "/usr/local/bin/node-gyp" "rebuild"
+gyp ERR! cwd /Users/gturner/Developer/Work/prototype-nuimotion/node_modules/nuimotion/src
+gyp ERR! node -v v0.10.23
+gyp ERR! node-gyp -v v0.12.2
+gyp ERR! not ok 
+steve:src gturner$ ls
+Common		Depth.cpp	Depth.h		Include		Main.cpp	Main.h		build		enums		gestures
+steve:src gturner$ cd ..
+steve:nuimotion gturner$ ls
+License.txt	README.md	binding.gyp	depth.js	index.js	package.json	quickstart	src		tests
+steve:nuimotion gturner$ 
+```
+
+- But running it from `{mynodeproject}/node_modules/nuimotion` is successfull:
+
+```
+steve:nuimotion gturner$ node-gyp rebuild
+gyp info it worked if it ends with ok
+gyp info using node-gyp@0.12.2
+gyp info using node@0.10.23 | darwin | x64
+gyp WARN EACCES user "gturner" does not have permission to access the dev dir "/Users/gturner/.node-gyp/0.10.23"
+gyp WARN EACCES attempting to reinstall using temporary dev dir "/var/folders/bz/r8sdtrc11fb_jsvlhzyqjjh80000gn/T/.node-gyp"
+gyp info spawn python
+gyp info spawn args [ '/usr/local/lib/node_modules/node-gyp/gyp/gyp_main.py',
+gyp info spawn args   'binding.gyp',
+gyp info spawn args   '-f',
+gyp info spawn args   'make',
+gyp info spawn args   '-I',
+gyp info spawn args   '/Users/gturner/Developer/Work/prototype-nuimotion/node_modules/nuimotion/build/config.gypi',
+gyp info spawn args   '-I',
+gyp info spawn args   '/usr/local/lib/node_modules/node-gyp/addon.gypi',
+gyp info spawn args   '-I',
+gyp info spawn args   '/var/folders/bz/r8sdtrc11fb_jsvlhzyqjjh80000gn/T/.node-gyp/0.10.23/common.gypi',
+gyp info spawn args   '-Dlibrary=shared_library',
+gyp info spawn args   '-Dvisibility=default',
+gyp info spawn args   '-Dnode_root_dir=/var/folders/bz/r8sdtrc11fb_jsvlhzyqjjh80000gn/T/.node-gyp/0.10.23',
+gyp info spawn args   '-Dmodule_root_dir=/Users/gturner/Developer/Work/prototype-nuimotion/node_modules/nuimotion',
+gyp info spawn args   '--depth=.',
+gyp info spawn args   '--generator-output',
+gyp info spawn args   'build',
+gyp info spawn args   '-Goutput_dir=.' ]
+gyp info spawn make
+gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+  CXX(target) Release/obj.target/nuimotion/src/Main.o
+  CXX(target) Release/obj.target/nuimotion/src/enums/EnumMapping.o
+  CXX(target) Release/obj.target/nuimotion/src/gestures/GestureRecognizer.o
+  CXX(target) Release/obj.target/nuimotion/src/gestures/Swipe.o
+../src/gestures/Swipe.cpp:378:31: warning: comparison of integers of different signs: 'int' and 'clock_t' (aka 'unsigned long') [-Wsign-compare]
+            if (_startTimeSwipeRight == clock() ) {
+                ~~~~~~~~~~~~~~~~~~~~ ^  ~~~~~~~
+1 warning generated.
+  CXX(target) Release/obj.target/nuimotion/src/gestures/Wave.o
+  SOLINK_MODULE(target) Release/nuimotion.node
+  SOLINK_MODULE(target) Release/nuimotion.node: Finished
+gyp info ok 
+steve:nuimotion gturner$ 
+```
+
+- A side effect of this is the requirement to edit out the `src` folder from the index.js:
+
+```
+vi ~/Developer/Work/prototype-nuimotion/node_modules/nuimotion/index.js
+```
+
+```
+module.exports = require('./build/Release/nuimotion.node');
+...
+```
+
