@@ -24,6 +24,17 @@ Related to this, Primesense has stopped selling it's hardware 3D sensors. Additi
 @gordonturner has provided extensive documentation and research to get NuiMotion up and running on both OSX and Ubuntu using the Kinect and Freenect. His complete notes on end to end installation can be found at the end of this readme. Thanks Gordon!
 
 
+v0.2.0 Release Notes
+====================
+
+More automatic build process tested on Windows, Linux, and OSX. Previously, users needed to manually move files to their project root.
+
+Project was not running on Windows with newest version of OpenNI/NiTE. Rewrote NiTE initialization according to latest examples
+
+RGB and Depth streams provided with depth.js example for using Node Canvas and taking snapshots with 3D sensing camera
+
+
+
 System Requirements
 ===================
 
