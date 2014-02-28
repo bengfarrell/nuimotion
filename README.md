@@ -122,10 +122,10 @@ Finally, run npm install nuimotion - or if already present, node-gyp clean rebui
 
 
 
-Installation on Ubuntu using the Kinect
-=======================================
+Installation on Ubuntu using the Kinect and Freenect
+====================================================
 
-note: these instructions are provided by @gordonturner, and are greatly appreciated. After this contribution by Gordon, I have released NuiMotion 0.2.0 which may alter his install instructions. If you see errors, please feel free to contribute back.
+note: these instructions are provided by @gordonturner, and are greatly appreciated. After this contribution by Gordon, I have released NuiMotion 0.2.0 which may alter his install instructions. If you see errors, please feel free to contribute back. These instructions worked as of NuiMotion 0.1.2
 
 - Installation notes for Ubuntu Desktop LTS 12.04 Precise.
 
