@@ -78,6 +78,41 @@
 						"destination": "<(module_root_dir)/build/Release/"
 				    }
 				]
+		    }],
+
+		    ["OS=='linux'", {
+				"copies": [   
+					{ 	"files": [  "<(OPENNI2)/Redist/OpenNI2/Drivers/libOniFile.so",
+					            	"<(OPENNI2)/Redist/OpenNI2/Drivers/libPS1080.so",
+					            	"<(OPENNI2)/Redist/OpenNI2/Drivers/PS1080.ini",
+					            	"<(OPENNI2)/Redist/OpenNI2/Drivers/PSLink.ini"],
+						"destination": "<(module_root_dir)/build/Release/OpenNI2/Drivers/"
+				    },
+
+				    # If NITE folder is not placed at root of project, it cannot be accessed
+				    # go up through node_modules to project root and drop in NiTE2 folder
+				    
+					{ 	"files": [  "<(NITE2)/Redist/NiTE2/Data/lbsdata.idx",
+					            	"<(NITE2)/Redist/NiTE2/Data/lbsdata.lbd",
+					            	"<(NITE2)/Redist/NiTE2/Data/lbsparam1.lbd",
+					            	"<(NITE2)/Redist/NiTE2/Data/lbsparam2.lbd"],
+						"destination": "<(module_root_dir)/../../NiTE2/Data/"
+				    },
+				    
+					{ 	"files": [  "<(NITE2)/Redist/NiTE2/FeatureExtraction.ini",
+					            	"<(NITE2)/Redist/NiTE2/h.dat",
+					            	"<(NITE2)/Redist/NiTE2/HandAlgorithms.ini",
+					            	"<(NITE2)/Redist/NiTE2/s.dat"],
+						"destination": "<(module_root_dir)/../../NiTE2/"
+				    },
+				    
+					{ 	"files": [  "<(OPENNI2)/Redist/libOpenNI2.so",
+					            	"<(OPENNI2)/Redist/OpenNI.ini",
+					            	"<(NITE2)/Redist/libNiTE2.so",
+					            	"<(NITE2)/Redist/NiTE.ini" ],
+						"destination": "<(module_root_dir)/build/Release/"
+				    }
+				]
 		    }]
 		]
     },
@@ -99,7 +134,10 @@
 
 		    ["OS=='mac'", {
 		        "libraries": ["<(OPENNI2)/Tools/libOpenNI2.dylib", "<(NITE2)/Redist/libNiTE2.dylib"]
-		    }]
+		    }],
+		    ["OS=='linux'", {
+		        "libraries": ["<(OPENNI2)/Tools/libOpenNI2.so", "<(NITE2)/Redist/libNiTE2.so"]
+		    }],
 	 	],
 
     	"include_dirs": [ "./src/enums", "./build/Release", "<(OPENNI2)/Include/", "<(NITE2)/Include/" ],
