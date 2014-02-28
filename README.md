@@ -17,19 +17,26 @@ The wiki covers system requirements, installation, building, and basic usage/doc
 System Requirements
 ===================
 
-This setup is tested with:
+Software
+--------
 
 OSX 10.8
+
 Windows 8.1
+
 Ubuntu 13
 
 OpenNI 2.2.0.33
+
 NiTE 2.2.0.11
+
 Node.js 0.10.24
 
-Hardware tested:
+Hardware tested
+---------------
 
 Asus Xtion Pro Live
+
 Kinect for XBOX (Freenect setup is required for OSX or Linux)
 
 
