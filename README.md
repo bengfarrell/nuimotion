@@ -21,7 +21,7 @@ As of November 2013, Apple has purchased Primesense, the creators of OpenNI and 
 
 Related to this, Primesense has stopped selling it's hardware 3D sensors. Additionally, Asus has stopped selling its sensors. This leaves only Kinect for Windows/XBOX devices available for your use. While the Kinect SDK is only available for Windows, the Freenect project enables cross platform use.
 
-@gordonturner has provided extensive documentation and research to get NuiMotion up and running on both OSX and Ubuntu. His complete notes on end to end installation can be found at the end of this readme. Thanks Gordon!
+@gordonturner has provided extensive documentation and research to get NuiMotion up and running on both OSX and Ubuntu using the Kinect and Freenect. His complete notes on end to end installation can be found at the end of this readme. Thanks Gordon!
 
 
 System Requirements
