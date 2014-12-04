@@ -79,7 +79,7 @@ module.exports.setJoints = function(joints) {
     } else {
         module.exports.jointsTracking = joints;
     }
-}
+};
 
 /**
  * add a listener for specific events (device/user/etc)
@@ -94,7 +94,23 @@ module.exports.addListener = function(eventName, callback) {
             module.exports._eventCallbackDict[eventName[evt]] = callback;
         }
     }
-}
+};
+
+/**
+ * remove a listener for specific events (device/user/etc)
+ * @param event name (string or array of events)
+ */
+module.exports.removeListener = function(eventName) {
+    if (typeof eventName == "string" && typeof module.exports._eventCallbackDict[eventName] !== "undefined") {
+        delete module.exports._eventCallbackDict[eventName];
+    } else {
+        for (var evt in eventName) {
+
+            if (typeof module.exports._eventCallbackDict[eventName[evt]] !== "undefined")
+            delete module.exports._eventCallbackDict[eventName[evt]];
+        }
+    }
+};
 
 /**
  * add a listener for gestures
@@ -102,12 +118,15 @@ module.exports.addListener = function(eventName, callback) {
  * @parm callback function
  */
 module.exports.addGesture = function(gestureName, callback) {
+
+    var gestureType;
+
     if (typeof gestureName == "string") {
         module.exports._gestureCallbackDict[gestureName] = callback;
 
         //don't expose end user to system complexities of "gesture type"
         //we'll get the type from the first part of the gesture name
-        var gestureType = gestureName.split("_")[0] + "_GESTURE";
+        gestureType = gestureName.split("_")[0] + "_GESTURE";
         module.exports.addGestureListener(gestureType, gestureName);
     } else {
         for (var gst in gestureName) {
@@ -115,11 +134,11 @@ module.exports.addGesture = function(gestureName, callback) {
 
             //don't expose end user to system complexities of "gesture type"
             //we'll get the type from the first part of the gesture name
-            var gestureType = gestureName[gst].split("_")[0] + "_GESTURE";
+            gestureType = gestureName[gst].split("_")[0] + "_GESTURE";
             module.exports.addGestureListener(gestureType, gestureName[gst]);
         }
     }
-}
+};
 
 /**
  * start skeleton listener loop when skeleton is in view
@@ -139,10 +158,10 @@ module.exports.startSkeletonListener = function(joints, callback, rate) {
     }
 
     // if skeleton already tracking, immediately start the listener
-    if (module.exports.isSkeletonTracking == true && !module.exports._frameLoopTimer) {
+    if (module.exports.isSkeletonTracking === true && !module.exports._frameLoopTimer) {
         module.exports._frameLoopTimer = setInterval(module.exports._onFrameLoopUpdate, module.exports.frameDelay);
     }
-}
+};
 
 /**
  * timed frame loop update for issuing skeleton/joint tracking events
@@ -153,7 +172,7 @@ module.exports._onFrameLoopUpdate = function() {
         var skeleton = module.exports.getJoints.apply(this, module.exports.jointsTracking);
         module.exports.onSkeletonEventHandler.apply(this, [ {skeleton: skeleton} ]);
     }
-}
+};
 
 /**
  * events listener
